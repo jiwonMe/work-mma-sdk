@@ -1,0 +1,777 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ko" lang="ko"><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>병역지정업체검색&gt;「산업지원 병역일터」</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="stylesheet" type="text/css" href="/caisBYIS/css/sub.css">
+    <!--[if lt IE 7]>
+    <script type="text/javascript" src="js/unitpngfix.js"></script>
+    <![endif]-->
+    <script type="text/javascript" src="/caisBYIS/js/jquery-1.10.2.js"></script>
+    <script type="text/javascript" src="/caisBYIS/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/caisBYIS/js/ui.js"></script>
+    <script type="text/javascript" src="/caisBYIS/js/code.js"></script>
+    <script type="text/javascript">
+  //<![CDATA[
+    $(document).ready(function(){
+        var menuid = ''; //
+        setMenuShow(menuid);
+
+        gf_createGtcdSelectBox_SS($("#eopjong_gbcd"),"S","432", "", "", "", [/^4/]);
+        //기업규모 표출 정비 벤처기업은 중소기업으로 표출
+        //gf_createGtcdSelectBox_SS($("#gegyumo_cd"),"A","423", "", "", "", "");
+        gf_createGtcdSelectBox_SS($("#gegyumo_cd"),"A","423", "", "", "", [/^03/]);
+        gf_createGtcdCheckBox_SS($(".list_table"),"A","410", "", "", "", "", "");
+
+        // 시도 선택
+        gf_createSidoSelectBox_SS($("#sido_addr"), "", "", "", "");
+        var sido_addr = $('#sido_addr option:selected').val();
+        // 시군구 선택
+        if(sido_addr != undefined) {
+            gf_createSigunguSelectBox_SS($("#sigungu_addr"), sido_addr, "", "", "", "");
+        }
+
+        // 검색 초기화
+        $('#searchInit').click(function(){
+            $('#eopjong_gbcd').val('');
+            $('#gegyumo_cd').val('');
+            $('#al_eopjong_gbcd').val('');
+            $('#eopjong_gbcd_list').val('');
+            $('#eopche_nm').val('');
+            $('#sido_addr').val('');
+            $('#sigungu_addr').val('');
+            $('#chaeyongym').prop('checked', false);
+            $('#bjinwonym').prop('checked', false);
+
+            $('.list_table').find('li').remove();
+
+            $('.list_table').append('<li>업종별분류를 선택하세요.</li>');
+            $('[name=searchForm]').submit();
+        });
+    });
+
+    function fn_changeEopjong(){
+        var sEopjong_gbcd = $('#eopjong_gbcd option:selected').val();
+        if(sEopjong_gbcd != undefined){
+            gf_createGtcdCheckBox_SS($(".list_table"),"A","410", sEopjong_gbcd, "", "", "", "");
+        }
+    }
+
+    function fn_search(){
+
+        $('[name=searchForm]').attr("action", "/caisBYIS/search/byjjecgeomsaek.do");
+        $('#eopjong_gbcd_yn').val("");
+        if($('#eopjong_gbcd').val() != '' )
+        {
+            if($('input:checkbox[name=eopjong_cd]').length != undefined){
+                var jbArray = new Array();
+                $('input:checkbox[name=eopjong_cd]:checked').each(function (idx){
+                    jbArray.push($(this).val());
+                });
+                $('#al_eopjong_gbcd').val(jbArray);
+                $('#eopjong_gbcd_list').val(jbArray.join(','));
+
+                $('[name=searchForm]').submit();
+            }
+        }else{
+
+            alert('복무형태를 선택하세요');
+            $('#eopjong_gbcd').focus();
+            return false;
+        }
+        // if($('[name=searchForm]').valid()){
+        //  }
+    }
+
+    // 업종, 기업규모 셀렉트박스
+    function gf_createGtcdSelectBox_SS(obj, optionDiv, gongtong_gbcd, selectVal, disableYn, returnFnc, excludesCodeArr) {
+        var url = '/caisBYIS/comm/selectGtcdList.json';
+        var param = {gongtong_gbcd : gongtong_gbcd};
+        $.ajax({
+            url: url,
+            data: param,
+            async:false,
+            dataType: 'json',
+            type: 'post',
+            success: function(data) {
+                $(obj).find("option").remove();
+
+                //선택
+                if(optionDiv == "S") {
+                    $(obj).append('<option value="">=선택=</option>');
+                }
+
+                //전체
+                if(optionDiv == "A") {
+                    $(obj).append('<option value="">=전체=</option>');
+                }
+                if(data.GtCdlist.length > 0) {
+                    var html = "";
+                    for(var i = 0; i<data.GtCdlist.length; i++) {
+                        var boolShow = true;
+                        if(excludesCodeArr){
+                            jQuery.each(excludesCodeArr, function(index,value){
+                                //정규식 처리
+                                if (typeof value == 'object'
+                                   // && value.hasOwnProperty('ignoreCase')
+                                    ){
+                                    boolShow = !value.test(data.GtCdlist[i].gongtong_cd);
+                                    if (!boolShow){
+                                        return false;
+                                    }
+                                }
+                                else{
+                                    if(data.GtCdlist[i].gongtong_cd == value){
+                                        boolShow = false;
+                                        return false;
+                                    }
+                                }
+                            });
+                        }
+                        if(boolShow){
+                            html = '<option value="' + data.GtCdlist[i].gongtong_cd + '"';
+
+                            if(selectVal == data.GtCdlist[i].gongtong_cd) {
+                                html += ' selected="selected"';
+                            }
+
+                            html += '>' + data.GtCdlist[i].gtcd_nm + '<\/option>';
+
+                            $(obj).append(html);
+                        }
+                    }
+                }
+                if(disableYn == "Y") {
+                    $(obj).attr("disabled", "disabled");
+                }
+                if(returnFnc != undefined && returnFnc != "") {
+                    eval(returnFnc);
+                }
+            },
+            error: function(xhr, option, error) {
+                alert("error : " + error);
+            }
+        });
+    }
+    // 업종 체크 박스
+    function gf_createGtcdCheckBox_SS(obj, optionDiv, gongtong_gbcd, checkVal, selectVal, disableYn, returnFnc, excludesCodeArr) {
+        var url = '/caisBYIS/comm/selectGtcdList.json';
+        var param = {gongtong_gbcd : gongtong_gbcd};
+
+        if(checkVal == ''){
+            return;
+        }
+        $.ajax({
+            url: url,
+            data: param,
+            async:false,
+            dataType: 'json',
+            type: 'post',
+            success: function(data) {
+                $('.list_table').find('li').remove();
+                //$('#eopjong_list').append('<td colspan="3" id="eopjong_list">업종별분류를 선택하세요.</td>');
+                //선택
+
+                if(data.GtCdlist.length > 0) {
+                    var html = "";
+                    for(var i = 0; i<data.GtCdlist.length; i++) {
+                        var boolShow = true;
+                        if(excludesCodeArr){
+                            jQuery.each(excludesCodeArr, function(index,value){
+                                if(data.GtCdlist[i].gongtong_cd == value){
+                                    boolShow = false;
+                                }
+                            });
+                        }
+
+                      //  alert("gtcd.substring(1, 3) : " + gtcd.substring(1, 3));
+                        if(boolShow){
+                            var gtcd = data.GtCdlist[i].gongtong_cd;
+                             // 12 방산분야 업종, 13 농어업분야, 14 기능특기자
+                            if(gtcd.substring(0,1) == checkVal &&
+                                    gtcd.substring(1, 5) != '0000' &&
+                                     gtcd.substring(0, 2) != '12' &&
+                                     gtcd.substring(0, 2) != '13' &&
+                                     gtcd.substring(0, 2) != '14' &&
+                                    gtcd.substring(2, 5) != '000' &&
+                                    gtcd.substring(3, 5) != '00')
+                            {
+                                html = '<li><span class="check"><input name="eopjong_cd" id="eopjong_cd'+i+'" type="checkbox" value="' + data.GtCdlist[i].gongtong_cd + '"';
+
+                                if(selectVal != undefined){
+                                    var temp = selectVal.split(',');
+                                    for(var j=0; j < temp.length; j++){
+                                        if(temp[j] == data.GtCdlist[i].gongtong_cd) {
+                                            html += ' checked="checked"';
+                                        }
+                                    }
+                                }
+
+
+                            html += '/><label for="eopjong_cd'+i+'">' + data.GtCdlist[i].gtcd_nm+'</label></span></li>';
+
+                            $(obj).append(html);
+                            }
+                        }
+                    }
+                }
+                if(disableYn == "Y") {
+                    $(obj).attr("disabled", "disabled");
+                }
+                if(returnFnc != undefined && returnFnc != "") {
+                    eval(returnFnc);
+                }
+            },
+            error: function(xhr, option, error) {
+                alert("error : " + error);
+            }
+        });
+    }
+
+    // 시도 선택
+    function gf_createSidoSelectBox_SS(obj, selectVal, disableYn, returnFnc, excludesCodeArr) {
+        var url = '/caisBYIS/comm/selectSidoList.json';
+        var param = null;
+        $.ajax({
+            url: url,
+            data: param,
+            async:false,
+            dataType: 'json',
+            type: 'post',
+            success: function(data) {
+                $(obj).find("option").remove();
+
+                $(obj).append('<option value="">=시도 선택=</option>');
+
+                if(data.sidoList.length > 0) {
+
+                    var html = "";
+                    for(var i = 0; i<data.sidoList.length; i++) {
+
+                        var boolShow = true;
+                        if(excludesCodeArr){
+                            jQuery.each(excludesCodeArr, function(index,value){
+                                //정규식 처리
+                                if (typeof value == 'object'
+                                    && value.hasOwnProperty('ignoreCase')){
+                                    boolShow = !value.test(data.sidoList[i].sido_addr);
+                                    if (!boolShow){
+                                        return false;
+                                    }
+                                }
+                                else{
+                                    if(data.sidoList[i].sido_addr == value){
+                                        boolShow = false;
+                                        return false;
+                                    }
+                                }
+                            });
+                        }
+
+                        if(boolShow){
+                            html = '<option value="' + data.sidoList[i].sido_addr + '"';
+
+                            if(selectVal == data.sidoList[i].sido_addr) {
+                                html += ' selected="selected"';
+                            }
+
+                            html += '>' + data.sidoList[i].sido_addr + '<\/option>';
+
+                            $(obj).append(html);
+
+                        }
+                    }
+                }
+                if(disableYn == "Y") {
+                    $(obj).attr("disabled", "disabled");
+                }
+                if(returnFnc != undefined && returnFnc != "") {
+                    eval(returnFnc);
+                }
+            },
+            error: function(xhr, option, error) {
+                alert("error : " + error);
+            }
+        });
+    }
+
+
+    function fn_changeSido()
+    {
+        var sido_addr = $('#sido_addr option:selected').val();
+        if(sido_addr != undefined){
+            gf_createSigunguSelectBox_SS($("#sigungu_addr"), sido_addr, "", "", "", "");
+        }
+    }
+
+    // 시군구 선택
+    function gf_createSigunguSelectBox_SS(obj, sido_addr, selectVal, disableYn, returnFnc, excludesCodeArr) {
+
+        var url = '/caisBYIS/comm/selectSigunguList.json';
+        var param = {sido_addr : sido_addr};
+        $.ajax({
+            url: url,
+            data: param,
+            async:false,
+            dataType: 'json',
+            type: 'post',
+            success: function(data) {
+                $(obj).find("option").remove();
+
+                $(obj).append('<option value="">=시군구 선택=</option>');
+
+                if(data.sigunguList.length > 0) {
+
+                    var html = "";
+                    for(var i = 0; i<data.sigunguList.length; i++) {
+
+                        var boolShow = true;
+                        if(excludesCodeArr){
+                            jQuery.each(excludesCodeArr, function(index,value){
+                                //정규식 처리
+                                if (typeof value == 'object'
+                                    && value.hasOwnProperty('ignoreCase')){
+                                    boolShow = !value.test(data.sigunguList[i].sigungu_addr);
+                                    if (!boolShow){
+                                        return false;
+                                    }
+                                }
+                                else{
+                                    if(data.sigunguList[i].sigungu_addr == value){
+                                        boolShow = false;
+                                        return false;
+                                    }
+                                }
+                            });
+                        }
+
+                        if(boolShow){
+                            html = '<option value="' + data.sigunguList[i].sigungu_addr + '"';
+
+                            if(selectVal == data.sigunguList[i].sigungu_addr) {
+                                html += ' selected="selected"';
+                            }
+
+                            html += '>' + data.sigunguList[i].sigungu_addr + '<\/option>';
+
+                            $(obj).append(html);
+
+                        }
+                    }
+                }
+                if(disableYn == "Y") {
+                    $(obj).attr("disabled", "disabled");
+                }
+                if(returnFnc != undefined && returnFnc != "") {
+                    eval(returnFnc);
+                }
+            },
+            error: function(xhr, option, error) {
+                alert("error : " + error);
+            }
+        });
+    }
+
+    // 엑셀저장
+    function fn_saveExecel(){
+
+        $('[name=searchForm]').attr("action", "/caisBYIS/search/downloadBYJJEopCheExcel.do");
+
+        if($('#eopjong_gbcd').val() != '' )
+        {
+            if($('input:checkbox[name=eopjong_cd]').length != undefined){
+                var jbArray = new Array();
+                $('input:checkbox[name=eopjong_cd]:checked').each(function (idx){
+                    jbArray.push($(this).val());
+                });
+                $('#al_eopjong_gbcd').val(jbArray);
+                $('#eopjong_gbcd_list').val(jbArray.join(','));
+
+                $('[name=searchForm]').submit();
+            }
+        }else{
+
+            alert('복무형태를 선택하세요');
+            $('#eopjong_gbcd').focus();
+            return false;
+        }
+    }
+
+  //]]>
+    </script>
+    </head>
+<body style="">
+
+<div id="byis_wrap">
+
+<div id="byis_top_wrap">
+    <!-- top Layer -->
+    
+
+
+
+
+
+
+<div id="top_wrap">
+<div id="top">
+    <div id="accessibility">
+        <a href="#contents_group">콘텐츠로 바로가기</a>
+        <a href="#lnb">대메뉴로 바로가기</a>
+    </div>
+    <div id="header_gnb" class="wrap">
+        <div id="gnb">
+            <ul>
+                <li class="text_collar nobg">
+                
+                
+                <a href="/caisBYIS/comm/eclogin.do">[업체 로그인]</a>
+                <a href="/caisBYIS/login/login.do">[로그인]</a>
+                
+                </li>
+                <li><a href="http://www.mma.go.kr/contents.do?mc=usr0000283" target="_blank" title="새창"><b><font size="3" color="#4FA6FF"><u>개인정보 처리방침</u></font></b></a></li>
+                <li><a href="http://mwpt.mma.go.kr/caisBMHS/index_mwps.jsp?menuNo=22226" target="_blank" title="새창">공동인증서 사용안내</a></li>
+            </ul>
+            <!-- //gnb -->
+        </div>
+        <div id="logo_img"><a href="/caisBYIS/main.do"><img src="/caisBYIS/images/common/logo_1.gif" alt="희망의 새시대 산업지원 병역일터"></a></div>
+    </div>
+</div>
+</div>
+
+<!--
+
+<div id="accessibility">
+<a href="#container">콘텐츠로 바로가기</a>
+<a href="#lnb">대메뉴로 바로가기</a>
+</div>
+<hr />
+<div id="header" class="wrap">
+<h1 id="logo">
+    <a href="/caisBYIS/main.do"><img src='/caisBYIS/images/common/logo.gif' alt="산업지원 병역일터"/></a>
+</h1>
+<div id="gnb">
+    <ul>
+        <li class="text_collar nobg">
+        
+        
+        <a href="/caisBYIS/login/login.do">로그인</a>
+        
+        </li>
+        <li><a href="http://www.mma.go.kr/contents.do?mc=usr0000283">개인정보 취급방침</a></li>
+        <li><a href="#n">공동인증서 사용안내</a></li>
+    </ul>
+</div>
+</div>
+<hr />
+-->
+
+    <!-- top Layer -->
+ </div>
+
+<div id="byis_bg">
+   <div id="byis_left_wrap">
+     <!-- leftMenu Layer -->
+     
+
+
+
+<script type="text/javascript">
+function fnMoveBoardView(gesipan_gbcd, tmpl_id, menu_id, pageUnit ) {
+       var frm = document.leftmenuform;
+       document.getElementById("gesipan_gbcd").value = gesipan_gbcd;
+       document.getElementById("tmpl_id").value = tmpl_id;
+       document.getElementById("menu_id").value = menu_id;
+       document.getElementById("pageUnit").value = pageUnit;
+       // FAQ
+       if (menu_id == 'm_m8_5') {
+           frm.action = '/caisBYIS/faq/BYITFAQMR.do';
+       // 병역병역지정업체검색
+       } else if (menu_id == 'm_m6_1') {
+           frm.action = '/caisBYIS/search/byjjecgeomsaek.do';
+       // 채용공고
+       } else if (menu_id == 'm_m7_1') {
+           frm.action = '/caisBYIS/search/cygonggogeomsaek.do';
+       } else if (menu_id == 'm_m9_1') {
+           frm.action = '/caisBYIS/search/cygonggogeomsaek.do';
+       } else {
+           frm.action = '/caisBYIS/board/boardList.do';
+       }
+       frm.submit();
+}
+   function JungboGongU_stop(){
+
+       var popUrl = "/caisBYIS/popup/2015/12/JBgongU_stop.html";
+      // var popTitle = "병역일터 접속 시 유의사항";
+       var popOption = "width=700,height=370, scrollbars=no";
+       window.open(popUrl,"_blank",popOption);
+   }
+</script>   
+
+<form id="leftmenuform" name="leftmenuform" method="post" action="">
+<input type="hidden" name="gesipan_gbcd" id="gesipan_gbcd">
+<input type="hidden" name="tmpl_id" id="tmpl_id">
+<input type="hidden" name="menu_id" id="menu_id">
+<input type="hidden" name="pageUnit" id="pageUnit">
+
+<div id="header_logo"><a href="/caisBYIS/main.do"><img src="/caisBYIS/images/common/logo.gif" alt="희망의 새시대 산업지원 병역일터"></a></div>
+   <div id="lnb" class="wrap">
+    <ul>
+        <li><a href="#"><img src="/caisBYIS/images/common/lnb_depm1.gif" alt="이용안내"></a>
+            <ul style="display:none;" id="m_m1">
+                <li id="m_m1_1"><a href="/caisBYIS/contents/byitContents.do?contents_id=BYITIlBanIYJ_C&amp;menu_id=m_m1_1">일반이용자</a></li>
+                <li id="m_m1_2"><a href="/caisBYIS/contents/byitContents.do?contents_id=BYITBYUiMuJaGJ_C&amp;menu_id=m_m1_2">병역의무자(구직)</a></li>
+                <li id="m_m1_3"><a href="/caisBYIS/contents/byitContents.do?contents_id=BYITBYUiMuJaGI_t0&amp;menu_id=m_m1_3">병역지정업체(구인)</a></li>
+                <li id="m_m1_4"><a href="/caisBYIS/contents/byitContents.do?contents_id=BYITRoGeuInAN_C&amp;menu_id=m_m1_4">로그인안내</a></li>
+                <li id="m_m1_5"><a href="/caisBYIS/contents/byitContents.do?contents_id=BYITSYSMunUi_C&amp;menu_id=m_m1_5">업무담당자안내</a></li>
+            </ul>
+        </li>
+
+        <li><a href="#"><img src="/caisBYIS/images/common/lnb_depm2.gif" alt="전문연구 / 산업기능제도"></a>
+            <ul style="display:none;" id="m_m2">
+                   <li id="m_m2_1"><a href="http://www.mma.go.kr/contents.do?mc=mma0000760" target="_blank" title="새창으로 이동">개요</a></li>
+                   <li id="m_m2_2"><a href="http://www.mma.go.kr/contents.do?mc=mma0000761" target="_blank" title="새창으로 이동">병역지정업체 선정</a></li>
+                   <li id="m_m2_3"><a href="http://www.mma.go.kr/contents.do?mc=mma0000762" target="_blank" title="새창으로 이동">병역지정업체 인원배정</a></li>
+                   <li id="m_m2_4"><a href="http://www.mma.go.kr/contents.do?mc=mma0000764" target="_blank" title="새창으로 이동">편입</a></li>
+                   <li id="m_m2_5"><a href="http://www.mma.go.kr/contents.do?mc=mma0000765" target="_blank" title="새창으로 이동">복무관리</a></li>
+            </ul>
+        </li>
+
+           <li><a href="#"><img src="/caisBYIS/images/common/lnb_depm3.gif" alt="자가검증"></a>
+               <ul style="display:none;" id="m_m3">
+                   <li id="m_m3_1"><a href="/caisBYIS/contents/byitContents.do?contents_id=BYITJaGaGJ_C&amp;menu_id=m_m3_1">병역의무자(편입)</a></li>
+                   <li id="m_m3_2"><a href="/caisBYIS/contents/byitContents.do?contents_id=BYITJaGaGJ_Eopche_C&amp;menu_id=m_m3_2">병역지정업체(선정)</a></li>
+               </ul>
+           </li>
+
+           <!-- 실태조사  -->
+           
+
+           <li><a href="#" onclick="javascript:fnMoveBoardView('14','1','m_m5_1','10');"><img src="/caisBYIS/images/common/lnb_depm5.gif" alt="민원서식"></a></li>
+
+           <li><a href="#"><img src="/caisBYIS/images/common/lnb_depm6.gif" alt="병역병역지정업체검색"></a>
+               <ul style="display:none;" id="m_m6">
+                   <li id="m_m6_1"><a href="/caisBYIS/search/byjjecgeomsaek.do?eopjong_gbcd_yn=1&amp;eopjong_gbcd=1&amp;menu_id=m_m6_1">산업기능요원</a></li>
+                   <li id="m_m6_2"><a href="/caisBYIS/search/byjjecgeomsaek.do?eopjong_gbcd_yn=1&amp;eopjong_gbcd=2&amp;menu_id=m_m6_2">전문연구요원</a></li>
+                   <li id="m_m6_3"><a href="/caisBYIS/search/byjjecgeomsaek.do?eopjong_gbcd_yn=1&amp;eopjong_gbcd=3&amp;menu_id=m_m6_3">승선근무예비역</a></li>
+               </ul>
+           </li>
+
+
+
+
+
+           <li><a href="#" onclick="javascript:fnMoveBoardView('','','m_m7_1','10');"><img src="/caisBYIS/images/common/lnb_depm7.gif" alt="채용공고"></a></li>
+           <li id="m_m8_8"><a href="/caisBYIS/search/callCYGyeHoekJH.do?menu_id=m_m8_8"><img src="/caisBYIS/images/common/lnb_depm7-1.gif" alt="채용계획"></a></li>
+           <li><a href="#" onclick="javascript:fnMoveBoardView('15','1','m_m4_1','10');"><img src="/caisBYIS/images/common/lnb_depm4.gif" alt="복무우수사례"></a></li>
+
+           <li id="m_m8_3"><a href="/caisBYIS/usby/callBYITUSByeongYeokEC.do?menu_id=m_m8_3&amp;usbyjjeopche_gbcd=1"><img src="/caisBYIS/images/common/lnb_depm13a.gif" alt="우수병역지정업체"></a></li>
+           <li id="m_m8_4"><a href="#" onclick="javascript:fnMoveBoardView('17','1','m_m8_4','10');"><img src="/caisBYIS/images/common/lnb_depm10a.gif" alt="사이버교육방"></a></li>
+           <li id="m_m8_5"><a href="#" onclick="javascript:fnMoveBoardView('','','m_m8_5','10');"><img src="/caisBYIS/images/common/lnb_depm11a.gif" alt="FAQ"></a></li>
+           <li id="m_m8_6"><a href="#" onclick="javascript:fnMoveBoardView('13','1','m_m8_6','10');"><img src="/caisBYIS/images/common/lnb_depm12a.gif" alt="공지사항"></a></li>
+           
+           <!--국민신문고 로컬 테스트 -->
+           <li id="m_m9_1"><a href="/caisBYIS/search/GMSinMunGoSC.do?menu_id=m_m9_1"><img src="/caisBYIS/images/common/lnb_depm18.gif" alt="권익침해신고"></a></li>
+           <!--
+           
+            -->
+    </ul>
+   </div>
+<div id="bottom_logo" align="center"><img src="/caisBYIS/images/common/mma_logo.gif" alt="보다나은 병무청"></div>
+
+</form>
+
+     <!-- leftMenu Layer -->
+   </div>
+
+    <div id="byis_con_wrap">
+            <div id="contents_group">
+            <div id="rowgroup1">
+
+                <div id="sub_head">
+                    <h2>병역지정업체검색</h2>
+                    <p class="path">
+                        <a href="/caisBYIS/main.do"><img src="../images/sub/home.gif" alt="메인으로 이동"></a>
+                        &gt;
+                        <strong>병역지정업체검색</strong>
+                    </p>
+                </div>
+                <div id="content">
+                <!-- 컨텐츠 시작 -->
+                <form name="searchForm" action="/caisBYIS/search/byjjecgeomsaek.do" method="post">
+                <input type="hidden" name="al_eopjong_gbcd" id="al_eopjong_gbcd">
+                <input type="hidden" name="al_eopjong_gbcd_yn" id="al_eopjong_gbcd_yn">
+                <input type="hidden" name="eopjong_gbcd_list" id="eopjong_gbcd_list">
+                <table class="table_row" summary="병역지정업체검색 표의 업종별분류, 기업별, 업종선택, 업체명, 소재지, 채용공고유, 배정인원유 등의 정보 검색">
+                <caption>병역지정업체검색</caption>
+                <colgroup>
+                    <col width="110px">
+                    <col width="245px">
+                    <col width="110px">
+                    <col width="270px">
+                </colgroup>
+                <tbody>
+                    <tr>
+                        <th scope="row"><label for="eopjong_gbcd">*복무형태</label></th>
+                        <td>
+                            <select name="eopjong_gbcd" class="select_txt" id="eopjong_gbcd" onchange="fn_changeEopjong();">
+                            
+                            <option value="">=선택=</option><option value="1">산업기능요원</option><option value="2">전문연구요원</option><option value="3">승선근무예비역</option></select>
+                        </td>
+                        <th scope="row"><label for="gegyumo_cd">기업별</label></th>
+                        <td>
+                            <select name="gegyumo_cd" class="select_txt" id="gegyumo_cd">
+                            
+                            <option value="">=전체=</option><option value="01">대기업</option><option value="02">중소기업</option><option value="04">중견기업</option><option value="A1">농어민후계 등</option><option value="Z">해당사항없음</option></select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">업종선택</th>
+                        <td colspan="3"><ul class="list_table"><li>업종별분류를 선택하세요</li></ul></td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="eopche_nm">업체명</label></th>
+                        <td><input type="text" name="eopche_nm" id="eopche_nm" class="input_txt" value="" onkeyup="fn_checkSpecialkeyword(this);"></td>
+                        <th scope="row"><label for="juso">소재지</label></th>
+                        <td>
+                            <select name="sido_addr" class="select_txt fl width_48pst mr7px" id="sido_addr" onchange="fn_changeSido();">
+                            
+                            <option value="">=시도 선택=</option><option value="서울특별시">서울특별시</option><option value="부산광역시">부산광역시</option><option value="대구광역시">대구광역시</option><option value="인천광역시">인천광역시</option><option value="광주광역시">광주광역시</option><option value="대전광역시">대전광역시</option><option value="울산광역시">울산광역시</option><option value="세종특별자치시">세종특별자치시</option><option value="경기도">경기도</option><option value="충청북도">충청북도</option><option value="충청남도">충청남도</option><option value="전라남도">전라남도</option><option value="경상북도">경상북도</option><option value="경상남도">경상남도</option><option value="제주특별자치도">제주특별자치도</option><option value="강원특별자치도">강원특별자치도</option><option value="전북특별자치도">전북특별자치도</option></select>
+                            <select name="sigungu_addr" class="select_txt fl width_49pst" id="sigungu_addr">
+                            
+                            <option value="">=시군구 선택=</option><option value="가평군">가평군</option><option value="강남구">강남구</option><option value="강동구">강동구</option><option value="강릉시">강릉시</option><option value="강북구">강북구</option><option value="강서구">강서구</option><option value="강진군">강진군</option><option value="강화군">강화군</option><option value="거제시">거제시</option><option value="거창군">거창군</option><option value="경산시">경산시</option><option value="경주시">경주시</option><option value="계룡시">계룡시</option><option value="계양구">계양구</option><option value="고령군">고령군</option><option value="고성군">고성군</option><option value="고양시">고양시</option><option value="고양시 덕양구">고양시 덕양구</option><option value="고양시 일산동구">고양시 일산동구</option><option value="고양시 일산서구">고양시 일산서구</option><option value="고창군">고창군</option><option value="고흥군">고흥군</option><option value="곡성군">곡성군</option><option value="공주시">공주시</option><option value="과천시">과천시</option><option value="관악구">관악구</option><option value="광명시">광명시</option><option value="광산구">광산구</option><option value="광양시">광양시</option><option value="광주시">광주시</option><option value="광진구">광진구</option><option value="괴산군">괴산군</option><option value="구례군">구례군</option><option value="구로구">구로구</option><option value="구리시">구리시</option><option value="구미시">구미시</option><option value="군산시">군산시</option><option value="군위군">군위군</option><option value="군포시">군포시</option><option value="금산군">금산군</option><option value="금정구">금정구</option><option value="금천구">금천구</option><option value="기장군">기장군</option><option value="김제시">김제시</option><option value="김천시">김천시</option><option value="김포시">김포시</option><option value="김해시">김해시</option><option value="나주시">나주시</option><option value="남구">남구</option><option value="남동구">남동구</option><option value="남양주시">남양주시</option><option value="남원시">남원시</option><option value="남해군">남해군</option><option value="노원구">노원구</option><option value="논산시">논산시</option><option value="단양군">단양군</option><option value="달서구">달서구</option><option value="달성군">달성군</option><option value="담양군">담양군</option><option value="당진시">당진시</option><option value="대덕구">대덕구</option><option value="도봉구">도봉구</option><option value="동구">동구</option><option value="동대문구">동대문구</option><option value="동두천시">동두천시</option><option value="동래구">동래구</option><option value="동작구">동작구</option><option value="동해시">동해시</option><option value="마포구">마포구</option><option value="목포시">목포시</option><option value="무안군">무안군</option><option value="무주군">무주군</option><option value="문경시">문경시</option><option value="미추홀구">미추홀구</option><option value="밀양시">밀양시</option><option value="보령시">보령시</option><option value="보성군">보성군</option><option value="보은군">보은군</option><option value="봉화군">봉화군</option><option value="부산진구">부산진구</option><option value="부안군">부안군</option><option value="부여군">부여군</option><option value="부천시">부천시</option><option value="부천시 소사구">부천시 소사구</option><option value="부천시 오정구">부천시 오정구</option><option value="부천시 원미구">부천시 원미구</option><option value="부평구">부평구</option><option value="북구">북구</option><option value="사상구">사상구</option><option value="사천남양출장">사천남양출장</option><option value="사천남양출장소">사천남양출장소</option><option value="사천시">사천시</option><option value="사하구">사하구</option><option value="산청군">산청군</option><option value="삼척시">삼척시</option><option value="상주시">상주시</option><option value="서구">서구</option><option value="서구검단출장">서구검단출장</option><option value="서구검단출장소">서구검단출장소</option><option value="서귀포시">서귀포시</option><option value="서대문구">서대문구</option><option value="서산시">서산시</option><option value="서천군">서천군</option><option value="서초구">서초구</option><option value="성남시">성남시</option><option value="성남시 분당구">성남시 분당구</option><option value="성남시 수정구">성남시 수정구</option><option value="성남시 중원구">성남시 중원구</option><option value="성동구">성동구</option><option value="성북구">성북구</option><option value="성주군">성주군</option><option value="세종시">세종시</option><option value="속초시">속초시</option><option value="송탄출장소">송탄출장소</option><option value="송파구">송파구</option><option value="수성구">수성구</option><option value="수영구">수영구</option><option value="수원시">수원시</option><option value="수원시 권선구">수원시 권선구</option><option value="수원시 영통구">수원시 영통구</option><option value="수원시 장안구">수원시 장안구</option><option value="수원시 팔달구">수원시 팔달구</option><option value="순창군">순창군</option><option value="순천시">순천시</option><option value="시흥시">시흥시</option><option value="신안군">신안군</option><option value="아산시">아산시</option><option value="안동시">안동시</option><option value="안산시">안산시</option><option value="안산시 단원구">안산시 단원구</option><option value="안산시 상록구">안산시 상록구</option><option value="안성시">안성시</option><option value="안양시">안양시</option><option value="안양시 동안구">안양시 동안구</option><option value="안양시 만안구">안양시 만안구</option><option value="안중출장소">안중출장소</option><option value="양구군">양구군</option><option value="양산시">양산시</option><option value="양산시웅상출장소">양산시웅상출장소</option><option value="양양군">양양군</option><option value="양주시">양주시</option><option value="양천구">양천구</option><option value="양평군">양평군</option><option value="여수시">여수시</option><option value="여주시">여주시</option><option value="연수구">연수구</option><option value="연제구">연제구</option><option value="연천군">연천군</option><option value="영광군">영광군</option><option value="영덕군">영덕군</option><option value="영도구">영도구</option><option value="영동군">영동군</option><option value="영등포구">영등포구</option><option value="영암군">영암군</option><option value="영양군">영양군</option><option value="영월군">영월군</option><option value="영주시">영주시</option><option value="영천시">영천시</option><option value="예산군">예산군</option><option value="예천군">예천군</option><option value="오산시">오산시</option><option value="옥천군">옥천군</option><option value="옹진군">옹진군</option><option value="완도군">완도군</option><option value="완주군">완주군</option><option value="용산구">용산구</option><option value="용인시">용인시</option><option value="용인시 기흥구">용인시 기흥구</option><option value="용인시 수지구">용인시 수지구</option><option value="용인시 처인구">용인시 처인구</option><option value="울릉군">울릉군</option><option value="울주군">울주군</option><option value="울진군">울진군</option><option value="원주시">원주시</option><option value="유성구">유성구</option><option value="은평구">은평구</option><option value="음성군">음성군</option><option value="의령군">의령군</option><option value="의성군">의성군</option><option value="의왕시">의왕시</option><option value="의정부시">의정부시</option><option value="이천시">이천시</option><option value="익산시">익산시</option><option value="인제군">인제군</option><option value="임실군">임실군</option><option value="장성군">장성군</option><option value="장수군">장수군</option><option value="장유출장소">장유출장소</option><option value="장흥군">장흥군</option><option value="전주시">전주시</option><option value="전주시 덕진구">전주시 덕진구</option><option value="전주시 완산구">전주시 완산구</option><option value="정선군">정선군</option><option value="정읍시">정읍시</option><option value="제주시">제주시</option><option value="제천시">제천시</option><option value="종로구">종로구</option><option value="중구">중구</option><option value="중구영종출장">중구영종출장</option><option value="중구영종출장소">중구영종출장소</option><option value="중구용유출장">중구용유출장</option><option value="중구용유출장소">중구용유출장소</option><option value="중랑구">중랑구</option><option value="증평군">증평군</option><option value="진도군">진도군</option><option value="진안군">진안군</option><option value="진주시">진주시</option><option value="진천군">진천군</option><option value="창녕군">창녕군</option><option value="창원시">창원시</option><option value="창원시 마산합포구">창원시 마산합포구</option><option value="창원시 마산회원구">창원시 마산회원구</option><option value="창원시 성산구">창원시 성산구</option><option value="창원시 의창구">창원시 의창구</option><option value="창원시 진해구">창원시 진해구</option><option value="천안시">천안시</option><option value="천안시 동남구">천안시 동남구</option><option value="천안시 서북구">천안시 서북구</option><option value="철원군">철원군</option><option value="청도군">청도군</option><option value="청송군">청송군</option><option value="청양군">청양군</option><option value="청주시">청주시</option><option value="청주시 상당구">청주시 상당구</option><option value="청주시 서원구">청주시 서원구</option><option value="청주시 청원구">청주시 청원구</option><option value="청주시 흥덕구">청주시 흥덕구</option><option value="춘천시">춘천시</option><option value="충주시">충주시</option><option value="칠곡군">칠곡군</option><option value="태백시">태백시</option><option value="태안군">태안군</option><option value="통영시">통영시</option><option value="파주시">파주시</option><option value="평창군">평창군</option><option value="평택시">평택시</option><option value="포천시">포천시</option><option value="포항시">포항시</option><option value="포항시 남구">포항시 남구</option><option value="포항시 북구">포항시 북구</option><option value="풍양출장소">풍양출장소</option><option value="하남시">하남시</option><option value="하동군">하동군</option><option value="함안군">함안군</option><option value="함양군">함양군</option><option value="함평군">함평군</option><option value="합천군">합천군</option><option value="해남군">해남군</option><option value="해운대구">해운대구</option><option value="홍성군">홍성군</option><option value="홍천군">홍천군</option><option value="화성시">화성시</option><option value="화성시동부출장소">화성시동부출장소</option><option value="화성시동탄출장소">화성시동탄출장소</option><option value="화순군">화순군</option><option value="화천군">화천군</option><option value="횡성군">횡성군</option></select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="chaeyongym">채용공고</label></th>
+                        <td><span class="check"><input type="checkbox" name="chaeyongym" id="chaeyongym" class="" value="Y"><label for="chaeyongym">채용공고 등록업체</label></span></td>
+                        <th scope="row"><label for="bjinwonym">잔여배정인원</label></th>
+                        <td>
+                            <span class="check mr10px"><label for="bjinwonym"><input type="checkbox" name="bjinwonym" id="bjinwonym" class="" value="H">현역</label></span>
+                            <span class="check"><label for="bjinwonym2"><input type="checkbox" name="bjinwonym" id="bjinwonym2" class="" value="B">보충역</label></span>
+                        </td>
+                    </tr>
+                </tbody>
+                </table>
+                <p class="txt t-alignRt">
+                    <span class="btn icon_search"><a href="#none" onclick="fn_search();">조회</a></span>
+                    <span class="btn icon_re"><a href="#none" id="searchInit" onclick="">검색초기화</a></span>
+                </p>
+                </form>
+                <!-- 검색영역 시작 //-->
+                <div class="brd_top_n">
+                    <div class="topics">총 게시물 : 0건 (1/1 페이지)</div>
+                </div>
+                <!-- 검색영역 끝 //-->
+
+                <!-- 테이블 시작 //-->
+                <table class="brd_list_n" summary="병역지정업체검색 표의 업체명, 산학연계여부, 지방청, 채용유무 등의 정보 리스트">
+                    <caption>병역지정업체검색</caption>
+                    <colgroup>
+                        <col width="*">
+                        <col style="width: 22%;">
+                        <col style="width: 22%;">
+                        <col style="width: 22%;">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th scope="col">업체명</th>
+                            <th scope="col">선정년도</th>
+                            <th scope="col">지방청</th>
+                            <th scope="col" class="last">채용유무</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    
+                        <tr>
+                            <td colspan="4">조회된 게시물이 없습니다.</td>
+                        </tr>
+                    
+                    </tbody>
+                </table>
+                <!-- 테이블 끝 //-->
+
+                <!-- 버튼 시작 //-->
+                <div class="blist_btn_n">
+                    <div class="btnRight">
+                        <span class="btn icon_print"><a href="#none" onclick="fn_saveExecel();">엑셀 저장</a></span>
+                    </div>
+                    <div class="cb"></div>
+                </div>
+                <!-- 버튼 끝 //-->
+
+                <!-- 페이징 목록 시작 //-->
+                <div class="page_move_n">
+                    <a href="#"><span class="on">1</span></a>&nbsp;
+
+                    <div class="right">
+                        <form name="pageMoveForm" action="/caisBYIS/search/byjjecgeomsaek.do" method="post">
+                            <!--  -->
+                            <input type="hidden" name="al_eopjong_gbcd" id="pg_al_eopjong_gbcd" value="">
+                            <input type="hidden" name="eopjong_gbcd_list" id="pg_eopjong_gbcd_list" value="">
+                            <input type="hidden" name="eopjong_gbcd" value="">
+                            <input type="hidden" name="gegyumo_cd" value="">
+                            <input type="hidden" name="eopche_nm" value="">
+                            <input type="hidden" name="juso" value="">
+
+                            <input type="hidden" name="sido_addr" value="">
+                            <input type="hidden" name="sigungu_addr" value="">
+
+                            <input type="hidden" name="chaeyongym" value="">
+                            <input type="hidden" name="bjinwonym" value="">
+
+                            <input type="hidden" name="searchCondition" value="">
+                            <input type="hidden" name="searchKeyword" value="">
+                            <input type="hidden" name="pageUnit" value="10">
+                            <input type="hidden" name="pageIndex" id="pageIndex" value="1">
+                            <input type="hidden" name="menu_id" value="">
+
+                        </form>
+                    </div>
+                </div>
+                <!-- 페이징 목록 끝 //-->
+
+                <!-- 컨텐츠 끝 -->
+                </div>
+            </div>
+        </div>
+        </div>
+        <!-- footer Layer -->
+        
+
+<div id="footer" class="wrap">
+<h2 class="skip">병역일터 관할 주소</h2>
+    <div class="lnb_logo30"></div>
+    <div id="footer_info">
+        <address>(우)35208 대전광역시 서구 청사로 189, 정부대전청사 2동 <br>대표전화 : 1588-9090</address>
+        <p class="copy">COPYRIGHT(C)<br><strong>Military Manpower Administration</strong><br>ALL RIGHTS RESERVED.</p>		
+    </div>	<!-- //footer_info -->	
+</div> <!-- //footer -->
+        <!-- footer Layer -->
+
+    <hr>
+    <div id="accessibility-foot"> <a href="#container">콘텐츠로 바로가기</a> <a href="#lnb">대메뉴로 바로가기</a> </div>
+    </div>
+    </div>
+    <script type="text/javascript">
+    /* 페이지이동 */
+    function fn_PageList(pageNo) {
+        if($('#eopjong_gbcd').val() != '' )
+        {
+            if($('input:checkbox[name=eopjong_cd]').length != undefined){
+                var jbArray = new Array();
+                $('input:checkbox[name=eopjong_cd]:checked').each(function (idx){
+                    jbArray.push($(this).val());
+                });
+                $('#pg_al_eopjong_gbcd').val(jbArray);
+                $('#pg_eopjong_gbcd_list').val(jbArray.join(','));
+
+            }
+        }
+        document.pageMoveForm.pageIndex.value = pageNo;
+        document.pageMoveForm.submit();
+    }
+
+    </script>
+
+
+</body></html>
