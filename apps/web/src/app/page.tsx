@@ -1,57 +1,12 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
-import { MMAClient, CompanySearchParams, SearchResult } from 'mma-sdk';
+import React from 'react';
 import SearchForm from '../components/SearchForm';
 import CompanyList from '../components/CompanyList';
+import { useSearch } from '../hooks';
 
 export default function HomePage() {
-  const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [searchParams, setSearchParams] = useState<CompanySearchParams | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [lastSearchTime, setLastSearchTime] = useState<Date | null>(null);
-
-  const handleSearch = useCallback(async (params: CompanySearchParams) => {
-    setLoading(true);
-    setSearchParams(params);
-    setError(null);
-    
-    try {
-      // Create client with proxy URL for client-side requests
-      const client = new MMAClient({
-        proxyUrl: window.location.origin
-      });
-      const result = await client.searchCompanies(params);
-      setSearchResult(result);
-      setLastSearchTime(new Date());
-      
-      // Scroll to results if there are any
-      if (result && result.companies.length > 0) {
-        setTimeout(() => {
-          const resultElement = document.getElementById('search-results');
-          if (resultElement) {
-            resultElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        }, 100);
-      }
-    } catch (error) {
-      console.error('Search failed:', error);
-      setError('검색 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
-      setSearchResult(null);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const handlePageChange = useCallback((page: number) => {
-    if (searchParams) {
-      handleSearch({
-        ...searchParams,
-        pageIndex: page
-      });
-    }
-  }, [searchParams, handleSearch]);
+  const [{ searchResult, loading, error, lastSearchTime }, handleSearch, handlePageChange] = useSearch();
 
   return (
     <div className="space-y-8">

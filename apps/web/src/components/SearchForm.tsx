@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Checkbox } from 'ui';
-import { MMAClient, ServiceType, CompanySize, IndustryType, RegionType, CityType } from 'mma-sdk';
+import { MMAClient, ServiceType, CompanySize, IndustryType, RegionType, CityType, CompanySearchParams } from 'mma-sdk';
+import { isSearchParamsValid } from '../services';
 
 interface SearchFormProps {
-  onSearch: (params: any) => void;
+  onSearch: (params: CompanySearchParams) => void;
 }
 
 const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
@@ -185,7 +186,7 @@ const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
     if (hasActiveQuota) bjinwonym.push('H');
     if (hasReserveQuota) bjinwonym.push('B');
 
-    const searchParams = {
+    const searchParams: CompanySearchParams = {
       eopjong_gbcd: selectedServiceType,
       gegyumo_cd: selectedCompanySize,
       eopjong_cd: selectedIndustries,
@@ -201,7 +202,10 @@ const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
   };
 
   // Check if the form is valid and can be submitted
-  const isFormValid = !!selectedServiceType && selectedIndustries.length > 0;
+  const isFormValid = isSearchParamsValid({
+    eopjong_gbcd: selectedServiceType,
+    eopjong_cd: selectedIndustries
+  });
 
   return (
     <div className="relative">
@@ -253,7 +257,7 @@ const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
           {/* Service Type */}
           <div className="space-y-2">
             <label htmlFor="serviceType" className="block text-sm font-medium">
-              복무형태 *
+              복무형태
               <span className="text-red-500 ml-1">*</span>
             </label>
             <Select 
