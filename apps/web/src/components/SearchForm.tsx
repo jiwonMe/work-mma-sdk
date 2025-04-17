@@ -1,182 +1,59 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Checkbox } from 'ui';
-import { MMAClient, ServiceType, CompanySize, IndustryType, RegionType, CityType, CompanySearchParams } from 'mma-sdk';
+import { CompanySearchParams } from 'mma-sdk';
 import { isSearchParamsValid } from '../services';
+import { useFormData } from '../hooks';
 
 interface SearchFormProps {
   onSearch: (params: CompanySearchParams) => void;
 }
 
 const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
-  const [mmaClient] = useState(() => new MMAClient({
-    proxyUrl: typeof window !== 'undefined' ? window.location.origin : undefined
-  }));
+  const [
+    {
+      // Data
+      serviceTypes,
+      companySizes,
+      industryTypes,
+      provinces,
+      cities,
+      
+      // Loading states
+      isLoadingServiceTypes,
+      isLoadingCompanySizes,
+      isLoadingIndustries,
+      isLoadingProvinces,
+      isLoadingCities,
+      
+      // Selected values
+      selectedServiceType,
+      selectedCompanySize,
+      selectedIndustries,
+      companyName,
+      selectedProvince,
+      selectedCity,
+      hasRecruitment,
+      hasActiveQuota,
+      hasReserveQuota
+    },
+    {
+      setSelectedServiceType,
+      setSelectedCompanySize,
+      setCompanyName,
+      setSelectedProvince,
+      setSelectedCity,
+      setHasRecruitment,
+      setHasActiveQuota,
+      setHasReserveQuota,
+      handleIndustryToggle,
+      handleToggleAllIndustries,
+      resetForm
+    }
+  ] = useFormData();
   
-  // Data states
-  const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
-  const [companySizes, setCompanySizes] = useState<CompanySize[]>([]);
-  const [industryTypes, setIndustryTypes] = useState<IndustryType[]>([]);
-  const [provinces, setProvinces] = useState<RegionType[]>([]);
-  const [cities, setCities] = useState<CityType[]>([]);
-  
-  // Loading states
-  const [isLoadingServiceTypes, setIsLoadingServiceTypes] = useState(true);
-  const [isLoadingCompanySizes, setIsLoadingCompanySizes] = useState(true);
-  const [isLoadingIndustries, setIsLoadingIndustries] = useState(false);
-  const [isLoadingProvinces, setIsLoadingProvinces] = useState(true);
-  const [isLoadingCities, setIsLoadingCities] = useState(false);
-
-  // Form values
-  const [selectedServiceType, setSelectedServiceType] = useState<string>('');
-  const [selectedCompanySize, setSelectedCompanySize] = useState<string>('');
-  const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
-  const [companyName, setCompanyName] = useState<string>('');
-  const [selectedProvince, setSelectedProvince] = useState<string>('');
-  const [selectedCity, setSelectedCity] = useState<string>('');
-  const [hasRecruitment, setHasRecruitment] = useState<boolean>(false);
-  const [hasActiveQuota, setHasActiveQuota] = useState<boolean>(false);
-  const [hasReserveQuota, setHasReserveQuota] = useState<boolean>(false);
-  
-  // Collapse states
+  // UI state
   const [isOptionsExpanded, setIsOptionsExpanded] = useState<boolean>(false);
   const [isIndustriesExpanded, setIsIndustriesExpanded] = useState<boolean>(false);
-
-  // Load service types on mount
-  useEffect(() => {
-    const loadServiceTypes = async () => {
-      setIsLoadingServiceTypes(true);
-      try {
-        const types = await mmaClient.getServiceTypes();
-        setServiceTypes(types);
-        // Set a default service type if available
-        if (types.length > 0) {
-          setSelectedServiceType(types[0].code);
-        }
-      } catch (error) {
-        console.error('Failed to load service types:', error);
-      } finally {
-        setIsLoadingServiceTypes(false);
-      }
-    };
-
-    const loadCompanySizes = async () => {
-      setIsLoadingCompanySizes(true);
-      try {
-        const sizes = await mmaClient.getCompanySizes();
-        setCompanySizes(sizes);
-      } catch (error) {
-        console.error('Failed to load company sizes:', error);
-      } finally {
-        setIsLoadingCompanySizes(false);
-      }
-    };
-
-    const loadProvinces = async () => {
-      setIsLoadingProvinces(true);
-      try {
-        const provinces = await mmaClient.getProvinces();
-        setProvinces(provinces);
-      } catch (error) {
-        console.error('Failed to load provinces:', error);
-      } finally {
-        setIsLoadingProvinces(false);
-      }
-    };
-
-    loadServiceTypes();
-    loadCompanySizes();
-    loadProvinces();
-  }, [mmaClient]);
-
-  // Load industry types when service type changes
-  useEffect(() => {
-    const loadIndustryTypes = async () => {
-      if (!selectedServiceType) {
-        setIndustryTypes([]);
-        return;
-      }
-
-      setIsLoadingIndustries(true);
-      try {
-        const types = await mmaClient.getIndustryTypes(selectedServiceType);
-        setIndustryTypes(types);
-        
-        // Automatically select all industry types
-        if (types.length > 0) {
-          setSelectedIndustries(types.map(type => type.code));
-        }
-      } catch (error) {
-        console.error('Failed to load industry types:', error);
-      } finally {
-        setIsLoadingIndustries(false);
-      }
-    };
-
-    loadIndustryTypes();
-  }, [selectedServiceType, mmaClient]);
-
-  // Load cities when province changes
-  useEffect(() => {
-    const loadCities = async () => {
-      if (!selectedProvince) {
-        setCities([]);
-        return;
-      }
-
-      try {
-        const cities = await mmaClient.getCities(selectedProvince);
-        setCities(cities);
-      } catch (error) {
-        console.error('Failed to load cities:', error);
-      }
-    };
-
-    loadCities();
-  }, [selectedProvince, mmaClient]);
-
-  const handleServiceTypeChange = (value: string) => {
-    setSelectedServiceType(value);
-    // Don't clear selected industries since we'll auto-select them when loaded
-  };
-
-  const handleProvinceChange = (value: string) => {
-    setSelectedProvince(value);
-    setSelectedCity('');
-  };
-
-  const handleIndustryToggle = (code: string) => {
-    setSelectedIndustries((prev) => {
-      if (prev.includes(code)) {
-        return prev.filter((c) => c !== code);
-      } else {
-        return [...prev, code];
-      }
-    });
-  };
-
-  // Handle select/deselect all industries
-  const handleToggleAllIndustries = () => {
-    if (selectedIndustries.length === industryTypes.length) {
-      // If all are selected, deselect all
-      setSelectedIndustries([]);
-    } else {
-      // Else select all
-      setSelectedIndustries(industryTypes.map(industry => industry.code));
-    }
-  };
-
-  // Reset form to initial state
-  const handleReset = () => {
-    // Preserve the service type but reset everything else
-    setSelectedCompanySize('');
-    setSelectedIndustries([]);
-    setCompanyName('');
-    setSelectedProvince('');
-    setSelectedCity('');
-    setHasRecruitment(false);
-    setHasActiveQuota(false);
-    setHasReserveQuota(false);
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -262,7 +139,7 @@ const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
             </label>
             <Select 
               value={selectedServiceType} 
-              onValueChange={handleServiceTypeChange} 
+              onValueChange={setSelectedServiceType} 
               disabled={isLoadingServiceTypes}
             >
               <SelectTrigger id="serviceType" className={isLoadingServiceTypes ? "animate-pulse" : ""}>
@@ -314,7 +191,7 @@ const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
             </label>
             <Select 
               value={selectedProvince} 
-              onValueChange={handleProvinceChange}
+              onValueChange={setSelectedProvince}
               disabled={isLoadingProvinces}
             >
               <SelectTrigger id="province" className={isLoadingProvinces ? "animate-pulse" : ""}>
@@ -500,7 +377,7 @@ const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
         )}
 
         <div className="flex justify-end space-x-4">
-          <Button type="button" variant="outline" onClick={handleReset}>
+          <Button type="button" variant="outline" onClick={resetForm}>
             초기화
           </Button>
           <Button 

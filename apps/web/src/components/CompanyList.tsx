@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from 'ui';
 import { Company, SearchResult } from 'mma-sdk';
+import { useCompanyList } from '../hooks';
 
 interface CompanyListProps {
   searchResult: SearchResult | null;
@@ -17,12 +18,7 @@ interface CompanyDetails extends Company {
 }
 
 const CompanyList: React.FC<CompanyListProps> = ({ searchResult, loading, onPageChange }) => {
-  const [selectedCompany, setSelectedCompany] = useState<CompanyDetails | null>(null);
-  
-  // Handler to show company details
-  const handleCompanySelect = (company: Company) => {
-    setSelectedCompany(company === selectedCompany ? null : company as CompanyDetails);
-  };
+  const { selectedCompany, pageNumbers, handleCompanySelect } = useCompanyList(searchResult);
 
   if (loading) {
     return (
@@ -65,32 +61,6 @@ const CompanyList: React.FC<CompanyListProps> = ({ searchResult, loading, onPage
       </div>
     );
   }
-
-  // Calculate pagination information
-  const getPageNumbers = () => {
-    const totalPages = searchResult.totalPages;
-    const currentPage = searchResult.currentPage;
-    
-    // Simple case: 5 or fewer pages
-    if (totalPages <= 5) {
-      return Array.from({ length: totalPages }, (_, i) => i + 1);
-    }
-    
-    // More complex case: current page is near start
-    if (currentPage <= 3) {
-      return [1, 2, 3, 4, 5];
-    }
-    
-    // Near end
-    if (currentPage >= totalPages - 2) {
-      return [totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
-    }
-    
-    // Middle
-    return [currentPage - 2, currentPage - 1, currentPage, currentPage + 1, currentPage + 2];
-  };
-
-  const pageNumbers = getPageNumbers();
 
   return (
     <div className="bg-white rounded-lg shadow-md">
@@ -175,7 +145,7 @@ const CompanyList: React.FC<CompanyListProps> = ({ searchResult, loading, onPage
                         </div>
                         <div>
                           <p className="text-slate-500 mb-1">소재지</p>
-                          <p className="font-medium">{(selectedCompany as CompanyDetails).address || '-'}</p>
+                          <p className="font-medium">{selectedCompany.address || '-'}</p>
                         </div>
                         <div>
                           <p className="text-slate-500 mb-1">선정년도</p>
@@ -183,15 +153,15 @@ const CompanyList: React.FC<CompanyListProps> = ({ searchResult, loading, onPage
                         </div>
                         <div>
                           <p className="text-slate-500 mb-1">업종</p>
-                          <p className="font-medium">{(selectedCompany as CompanyDetails).industryType || '-'}</p>
+                          <p className="font-medium">{selectedCompany.industryType || '-'}</p>
                         </div>
                         <div>
                           <p className="text-slate-500 mb-1">현역 배정인원</p>
-                          <p className="font-medium">{(selectedCompany as CompanyDetails).activeQuota || '-'}</p>
+                          <p className="font-medium">{selectedCompany.activeQuota || '-'}</p>
                         </div>
                         <div>
                           <p className="text-slate-500 mb-1">보충역 배정인원</p>
-                          <p className="font-medium">{(selectedCompany as CompanyDetails).reserveQuota || '-'}</p>
+                          <p className="font-medium">{selectedCompany.reserveQuota || '-'}</p>
                         </div>
                         <div>
                           <p className="text-slate-500 mb-1">채용 중</p>
