@@ -59,21 +59,57 @@ const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
   const [isIndustriesExpanded, setIsIndustriesExpanded] = useState<boolean>(false);
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState<boolean>(false);
 
+  // Helper function to check if localStorage is available
+  const isLocalStorageAvailable = () => {
+    try {
+      const testKey = '__test__';
+      window.localStorage.setItem(testKey, testKey);
+      window.localStorage.removeItem(testKey);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+
   // Load search history from localStorage on component mount
   useEffect(() => {
-    const savedHistory = localStorage.getItem('companySearchHistory');
-    if (savedHistory) {
+    // Check if we're in the browser and localStorage is available
+    if (typeof window !== 'undefined' && isLocalStorageAvailable()) {
       try {
-        setSearchHistory(JSON.parse(savedHistory));
+        console.log('Attempting to load search history from localStorage');
+        const savedHistory = window.localStorage.getItem('companySearchHistory');
+        console.log('Raw saved history:', savedHistory);
+        
+        if (savedHistory) {
+          const parsedHistory = JSON.parse(savedHistory);
+          console.log('Parsed history:', parsedHistory);
+          
+          if (Array.isArray(parsedHistory)) {
+            setSearchHistory(parsedHistory);
+            console.log('Search history set successfully');
+          }
+        }
       } catch (error) {
-        console.error('Failed to parse search history:', error);
+        console.error('Failed to load search history:', error);
+        // If there's an error, reset localStorage to prevent future issues
+        window.localStorage.removeItem('companySearchHistory');
       }
     }
   }, []);
 
   // Save search history to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('companySearchHistory', JSON.stringify(searchHistory));
+    // Only attempt to save if we're in the browser and localStorage is available
+    if (typeof window !== 'undefined' && isLocalStorageAvailable() && searchHistory.length > 0) {
+      try {
+        const jsonString = JSON.stringify(searchHistory);
+        console.log('Saving to localStorage:', jsonString);
+        window.localStorage.setItem('companySearchHistory', jsonString);
+        console.log('Search history saved successfully');
+      } catch (error) {
+        console.error('Failed to save search history:', error);
+      }
+    }
   }, [searchHistory]);
 
   const handleSubmit = (e: React.FormEvent) => {
