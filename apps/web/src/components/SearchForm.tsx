@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Checkbox } from 'ui';
 import { CompanySearchParams } from 'mma-sdk';
 import { isSearchParamsValid } from '../services';
@@ -9,6 +9,9 @@ interface SearchFormProps {
 }
 
 const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
+  // Search history state
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
+
   const [
     {
       // Data
@@ -56,6 +59,23 @@ const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
   const [isIndustriesExpanded, setIsIndustriesExpanded] = useState<boolean>(false);
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState<boolean>(false);
 
+  // Load search history from localStorage on component mount
+  useEffect(() => {
+    const savedHistory = localStorage.getItem('companySearchHistory');
+    if (savedHistory) {
+      try {
+        setSearchHistory(JSON.parse(savedHistory));
+      } catch (error) {
+        console.error('Failed to parse search history:', error);
+      }
+    }
+  }, []);
+
+  // Save search history to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('companySearchHistory', JSON.stringify(searchHistory));
+  }, [searchHistory]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -76,7 +96,29 @@ const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
       pageIndex: 1
     };
 
+    // Add company name to search history if it exists and is not already in history
+    if (companyName && companyName.trim() !== '') {
+      const trimmedName = companyName.trim();
+      setSearchHistory(prevHistory => {
+        // Remove the term if it already exists (to avoid duplicates)
+        const filteredHistory = prevHistory.filter(term => term !== trimmedName);
+        // Add the new term at the beginning (most recent first)
+        return [trimmedName, ...filteredHistory].slice(0, 10); // Keep only the 10 most recent searches
+      });
+    }
+
     onSearch(searchParams);
+  };
+
+  // Function to handle chip click (sets the search term)
+  const handleChipClick = (term: string) => {
+    setCompanyName(term);
+  };
+
+  // Function to remove a search term from history
+  const removeSearchTerm = (e: React.MouseEvent, term: string) => {
+    e.stopPropagation(); // Prevent the chip click handler from firing
+    setSearchHistory(prevHistory => prevHistory.filter(item => item !== term));
   };
 
   // Check if the form is valid and can be submitted
@@ -128,6 +170,31 @@ const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
                 검색
               </Button>
             </div>
+            
+            {/* Search History Chips */}
+            {searchHistory.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {searchHistory.map((term, index) => (
+                  <div 
+                    key={`${term}-${index}`}
+                    onClick={() => handleChipClick(term)}
+                    className="flex items-center px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm cursor-pointer hover:bg-blue-100 transition-colors"
+                  >
+                    <span>{term}</span>
+                    <button
+                      type="button"
+                      onClick={(e) => removeSearchTerm(e, term)}
+                      className="ml-1.5 p-0.5 rounded-full hover:bg-blue-200 focus:outline-none"
+                      aria-label={`Remove ${term}`}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </form>
         </div>
       </div>
