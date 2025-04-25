@@ -1,4 +1,5 @@
 import { MMAClient, CompanySearchParams, SearchResult } from 'mma-sdk';
+import { trackSearch, trackSearchError } from '../utils/analytics';
 
 export interface SearchState {
   searchResult: SearchResult | null;
@@ -32,6 +33,15 @@ export async function searchCompanies(
     
     const result = await client.searchCompanies(params);
     
+    // Track successful search with Vercel Analytics
+    if (result) {
+      trackSearch(
+        params.eopjong_gbcd || 'unknown',
+        result.companies.length,
+        params
+      );
+    }
+    
     callbacks?.onSearchSuccess?.(result, params);
     
     // Scroll to results if there are any
@@ -47,6 +57,10 @@ export async function searchCompanies(
     return result;
   } catch (error) {
     console.error('Search failed:', error);
+    
+    // Track search error with Vercel Analytics
+    trackSearchError(error, params);
+    
     callbacks?.onSearchError?.(error);
     return null;
   } finally {
