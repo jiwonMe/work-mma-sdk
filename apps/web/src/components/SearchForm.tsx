@@ -113,6 +113,26 @@ const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
   // Function to handle chip click (sets the search term)
   const handleChipClick = (term: string) => {
     setCompanyName(term);
+    
+    // Prepare search parameters
+    const bjinwonym: string[] = [];
+    if (hasActiveQuota) bjinwonym.push('H');
+    if (hasReserveQuota) bjinwonym.push('B');
+
+    // Immediately trigger search with the selected term
+    const searchParams: CompanySearchParams = {
+      eopjong_gbcd: selectedServiceType,
+      gegyumo_cd: selectedCompanySize,
+      eopjong_cd: selectedIndustries,
+      eopche_nm: term,
+      sido_addr: selectedProvince,
+      sigungu_addr: selectedCity,
+      chaeyongym: hasRecruitment ? 'Y' : '',
+      bjinwonym,
+      pageIndex: 1
+    };
+
+    onSearch(searchParams);
   };
 
   // Function to remove a search term from history
