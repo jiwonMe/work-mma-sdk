@@ -17,6 +17,17 @@ interface CompanyDetails extends Company {
   reserveQuota?: string | number;
 }
 
+// Utility function to clean company name and generate Wanted search URL
+const getWantedSearchUrl = (companyName: string): string => {
+  // Remove terms like "(주)", "주식회사" etc.
+  const cleanedName = companyName
+    .replace(/(\(주\)|주식회사|㈜|（주）)/g, '')
+    .trim();
+  
+  // Generate Wanted search URL
+  return `https://www.wanted.co.kr/search?query=${encodeURIComponent(cleanedName)}`;
+};
+
 const CompanyList: React.FC<CompanyListProps> = ({ searchResult, loading, onPageChange }) => {
   const { selectedCompany, pageNumbers, handleCompanySelect } = useCompanyList(searchResult);
 
@@ -82,7 +93,14 @@ const CompanyList: React.FC<CompanyListProps> = ({ searchResult, loading, onPage
             <div key={company.code || index} className="p-3">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="font-medium text-sm">{company.name}</h3>
+                  <a 
+                    href={getWantedSearchUrl(company.name)} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="font-medium text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                  >
+                    {company.name}
+                  </a>
                   <p className="text-xs text-slate-500 mt-1">
                     {company.regionalOffice || '-'}
                   </p>
@@ -114,6 +132,19 @@ const CompanyList: React.FC<CompanyListProps> = ({ searchResult, loading, onPage
               {selectedCompany === company && (
                 <div className="mt-3 p-3 bg-slate-50 rounded-md text-xs">
                   <div className="grid grid-cols-2 gap-3">
+                    <div className="col-span-2">
+                      <p className="text-slate-500 mb-1">업체명</p>
+                      <p className="font-medium">
+                        <a 
+                          href={getWantedSearchUrl(selectedCompany.name)} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 hover:underline"
+                        >
+                          {selectedCompany.name}
+                        </a>
+                      </p>
+                    </div>
                     <div>
                       <p className="text-slate-500 mb-1">업체 코드</p>
                       <p className="font-medium">{selectedCompany.code || '-'}</p>
@@ -166,7 +197,16 @@ const CompanyList: React.FC<CompanyListProps> = ({ searchResult, loading, onPage
             {searchResult.companies.map((company: Company, index) => (
               <React.Fragment key={company.code || index}>
                 <tr className={`hover:bg-slate-50 ${selectedCompany === company ? 'bg-slate-50' : ''}`}>
-                  <td className="py-3 px-4 text-sm font-medium">{company.name}</td>
+                  <td className="py-3 px-4 text-sm font-medium">
+                    <a 
+                      href={getWantedSearchUrl(company.name)} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 hover:underline"
+                    >
+                      {company.name}
+                    </a>
+                  </td>
                   <td className="py-3 px-4 text-sm text-center text-slate-600 hidden md:table-cell">
                     {company.selectionYear || '-'}
                   </td>
@@ -206,7 +246,16 @@ const CompanyList: React.FC<CompanyListProps> = ({ searchResult, loading, onPage
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                         <div>
                           <p className="text-slate-500 mb-1">업체명</p>
-                          <p className="font-medium">{selectedCompany.name}</p>
+                          <p className="font-medium">
+                            <a 
+                              href={getWantedSearchUrl(selectedCompany.name)} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 hover:underline"
+                            >
+                              {selectedCompany.name}
+                            </a>
+                          </p>
                         </div>
                         <div>
                           <p className="text-slate-500 mb-1">업체 코드</p>
