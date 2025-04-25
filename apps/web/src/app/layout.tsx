@@ -35,7 +35,7 @@ export default function RootLayout({
           </header>
           <main>{children}</main>
           <footer className="mt-8 sm:mt-12 text-center text-xs sm:text-sm text-slate-500">
-            <p>© 2023 병특.com - 병역특례 지정업체 검색 서비스</p>
+            <p>© 2025 병특.com - 병역특례 지정업체 검색 서비스</p>
           </footer>
         </div>
       </body>
