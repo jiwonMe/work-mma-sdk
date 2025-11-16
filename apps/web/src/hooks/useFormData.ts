@@ -1,259 +1,117 @@
-import { useState, useEffect } from 'react';
-import { MMAClient, ServiceType, CompanySize, IndustryType, RegionType, CityType } from 'mma-sdk';
+import { useState } from 'react';
+import { useServiceTypes } from './useServiceTypes';
+import { useCompanySizes } from './useCompanySizes';
+import { useIndustryTypes } from './useIndustryTypes';
+import { useRegions } from './useRegions';
+import { MMAClient } from 'mma-sdk';
 
 interface FormDataState {
-  // Data states
-  serviceTypes: ServiceType[];
-  companySizes: CompanySize[];
-  industryTypes: IndustryType[];
-  provinces: RegionType[];
-  cities: CityType[];
-  
-  // Loading states
-  isLoadingServiceTypes: boolean;
-  isLoadingCompanySizes: boolean;
-  isLoadingIndustries: boolean;
-  isLoadingProvinces: boolean;
-  isLoadingCities: boolean;
-
-  // Selected values
-  selectedServiceType: string;
-  selectedCompanySize: string;
-  selectedIndustries: string[];
+  serviceTypes: ReturnType<typeof useServiceTypes>['serviceTypes'];
+  companySizes: ReturnType<typeof useCompanySizes>['companySizes'];
+  industryTypes: ReturnType<typeof useIndustryTypes>['industryTypes'];
+  provinces: ReturnType<typeof useRegions>['provinces'];
+  cities: ReturnType<typeof useRegions>['cities'];
+  isLoadingServiceTypes: ReturnType<typeof useServiceTypes>['isLoading'];
+  isLoadingCompanySizes: ReturnType<typeof useCompanySizes>['isLoading'];
+  isLoadingIndustries: ReturnType<typeof useIndustryTypes>['isLoading'];
+  isLoadingProvinces: ReturnType<typeof useRegions>['isLoadingProvinces'];
+  isLoadingCities: ReturnType<typeof useRegions>['isLoadingCities'];
+  selectedServiceType: ReturnType<typeof useServiceTypes>['selectedServiceType'];
+  selectedCompanySize: ReturnType<typeof useCompanySizes>['selectedCompanySize'];
+  selectedIndustries: ReturnType<typeof useIndustryTypes>['selectedIndustries'];
   companyName: string;
-  selectedProvince: string;
-  selectedCity: string;
+  selectedProvince: ReturnType<typeof useRegions>['selectedProvince'];
+  selectedCity: ReturnType<typeof useRegions>['selectedCity'];
   hasRecruitment: boolean;
   hasActiveQuota: boolean;
   hasReserveQuota: boolean;
 }
 
 interface FormDataActions {
-  setSelectedServiceType: (value: string) => void;
-  setSelectedCompanySize: (value: string) => void;
-  setSelectedIndustries: (value: string[]) => void;
+  setSelectedServiceType: ReturnType<typeof useServiceTypes>['setSelectedServiceType'];
+  setSelectedCompanySize: ReturnType<typeof useCompanySizes>['setSelectedCompanySize'];
+  setSelectedIndustries: ReturnType<typeof useIndustryTypes>['setSelectedIndustries'];
   setCompanyName: (value: string) => void;
-  setSelectedProvince: (value: string) => void;
-  setSelectedCity: (value: string) => void;
+  setSelectedProvince: ReturnType<typeof useRegions>['setSelectedProvince'];
+  setSelectedCity: ReturnType<typeof useRegions>['setSelectedCity'];
   setHasRecruitment: (value: boolean) => void;
   setHasActiveQuota: (value: boolean) => void;
   setHasReserveQuota: (value: boolean) => void;
-  handleIndustryToggle: (code: string) => void;
-  handleToggleAllIndustries: () => void;
+  handleIndustryToggle: ReturnType<typeof useIndustryTypes>['handleIndustryToggle'];
+  handleToggleAllIndustries: ReturnType<typeof useIndustryTypes>['handleToggleAllIndustries'];
   resetForm: () => void;
 }
 
+/**
+ * 폼 데이터 관리 통합 훅
+ */
 export function useFormData(): [FormDataState, FormDataActions] {
-  const [mmaClient] = useState(() => new MMAClient({
-    proxyUrl: typeof window !== 'undefined' ? window.location.origin : undefined
-  }));
+  const proxyUrl = typeof window !== 'undefined' ? window.location.origin : undefined;
   
-  // Data states
-  const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
-  const [companySizes, setCompanySizes] = useState<CompanySize[]>([]);
-  const [industryTypes, setIndustryTypes] = useState<IndustryType[]>([]);
-  const [provinces, setProvinces] = useState<RegionType[]>([]);
-  const [cities, setCities] = useState<CityType[]>([]);
-  
-  // Loading states
-  const [isLoadingServiceTypes, setIsLoadingServiceTypes] = useState(true);
-  const [isLoadingCompanySizes, setIsLoadingCompanySizes] = useState(true);
-  const [isLoadingIndustries, setIsLoadingIndustries] = useState(false);
-  const [isLoadingProvinces, setIsLoadingProvinces] = useState(true);
-  const [isLoadingCities, setIsLoadingCities] = useState(false);
+  const serviceTypesHook = useServiceTypes(proxyUrl);
+  const companySizesHook = useCompanySizes(proxyUrl);
+  const regionsHook = useRegions(proxyUrl);
+  const industryTypesHook = useIndustryTypes(
+    serviceTypesHook.selectedServiceType,
+    proxyUrl
+  );
 
-  // Form values
-  const [selectedServiceType, setSelectedServiceType] = useState<string>('');
-  const [selectedCompanySize, setSelectedCompanySize] = useState<string>('');
-  const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
+  // 폼 값 상태
   const [companyName, setCompanyName] = useState<string>('');
-  const [selectedProvince, setSelectedProvince] = useState<string>('');
-  const [selectedCity, setSelectedCity] = useState<string>('');
   const [hasRecruitment, setHasRecruitment] = useState<boolean>(false);
   const [hasActiveQuota, setHasActiveQuota] = useState<boolean>(false);
   const [hasReserveQuota, setHasReserveQuota] = useState<boolean>(false);
 
-  // Load service types, company sizes, and provinces on mount
-  useEffect(() => {
-    const loadServiceTypes = async () => {
-      setIsLoadingServiceTypes(true);
-      try {
-        const types = await mmaClient.getServiceTypes();
-        setServiceTypes(types);
-        // Set a default service type if available
-        if (types.length > 0) {
-          setSelectedServiceType(types[0].code);
-        }
-      } catch (error) {
-        console.error('Failed to load service types:', error);
-      } finally {
-        setIsLoadingServiceTypes(false);
-      }
-    };
-
-    const loadCompanySizes = async () => {
-      setIsLoadingCompanySizes(true);
-      try {
-        const sizes = await mmaClient.getCompanySizes();
-        setCompanySizes(sizes);
-      } catch (error) {
-        console.error('Failed to load company sizes:', error);
-      } finally {
-        setIsLoadingCompanySizes(false);
-      }
-    };
-
-    const loadProvinces = async () => {
-      setIsLoadingProvinces(true);
-      try {
-        const provinces = await mmaClient.getProvinces();
-        setProvinces(provinces);
-      } catch (error) {
-        console.error('Failed to load provinces:', error);
-      } finally {
-        setIsLoadingProvinces(false);
-      }
-    };
-
-    loadServiceTypes();
-    loadCompanySizes();
-    loadProvinces();
-  }, [mmaClient]);
-
-  // Load industry types when service type changes
-  useEffect(() => {
-    const loadIndustryTypes = async () => {
-      if (!selectedServiceType) {
-        setIndustryTypes([]);
-        return;
-      }
-
-      setIsLoadingIndustries(true);
-      try {
-        const types = await mmaClient.getIndustryTypes(selectedServiceType);
-        setIndustryTypes(types);
-        
-        // Automatically select all industry types
-        if (types.length > 0) {
-          setSelectedIndustries(types.map(type => type.code));
-        }
-      } catch (error) {
-        console.error('Failed to load industry types:', error);
-      } finally {
-        setIsLoadingIndustries(false);
-      }
-    };
-
-    loadIndustryTypes();
-  }, [selectedServiceType, mmaClient]);
-
-  // Load cities when province changes
-  useEffect(() => {
-    const loadCities = async () => {
-      if (!selectedProvince) {
-        setCities([]);
-        setSelectedCity('');
-        return;
-      }
-
-      setIsLoadingCities(true);
-      try {
-        const cities = await mmaClient.getCities(selectedProvince);
-        setCities(cities);
-      } catch (error) {
-        console.error('Failed to load cities:', error);
-      } finally {
-        setIsLoadingCities(false);
-      }
-    };
-
-    loadCities();
-  }, [selectedProvince, mmaClient]);
-
-  // Handle industry toggle
-  const handleIndustryToggle = (code: string) => {
-    setSelectedIndustries((prev) => {
-      if (prev.includes(code)) {
-        return prev.filter((c) => c !== code);
-      } else {
-        return [...prev, code];
-      }
-    });
-  };
-
-  // Handle select/deselect all industries
-  const handleToggleAllIndustries = () => {
-    if (selectedIndustries.length === industryTypes.length) {
-      // If all are selected, deselect all
-      setSelectedIndustries([]);
-    } else {
-      // Else select all
-      setSelectedIndustries(industryTypes.map(industry => industry.code));
-    }
-  };
-
-  // Reset form to initial state
+  /**
+   * 폼 초기화
+   */
   const resetForm = () => {
-    // Preserve the service type but reset everything else
-    setSelectedCompanySize('');
     setCompanyName('');
-    setSelectedProvince('');
-    setSelectedCity('');
+    regionsHook.setSelectedProvince('');
+    regionsHook.setSelectedCity('');
     setHasRecruitment(false);
     setHasActiveQuota(false);
     setHasReserveQuota(false);
     
-    // Reload industry types to reset to all selected
-    if (selectedServiceType) {
-      mmaClient.getIndustryTypes(selectedServiceType)
-        .then(types => {
-          setIndustryTypes(types);
-          setSelectedIndustries(types.map(type => type.code));
-        })
-        .catch(error => console.error('Failed to reload industry types:', error));
-    }
+    // 업종 목록 리셋
+    industryTypesHook.resetIndustries();
   };
 
   return [
     {
-      // Data
-      serviceTypes,
-      companySizes,
-      industryTypes,
-      provinces,
-      cities,
-      
-      // Loading states
-      isLoadingServiceTypes,
-      isLoadingCompanySizes,
-      isLoadingIndustries,
-      isLoadingProvinces,
-      isLoadingCities,
-      
-      // Selected values
-      selectedServiceType,
-      selectedCompanySize,
-      selectedIndustries,
+      serviceTypes: serviceTypesHook.serviceTypes,
+      companySizes: companySizesHook.companySizes,
+      industryTypes: industryTypesHook.industryTypes,
+      provinces: regionsHook.provinces,
+      cities: regionsHook.cities,
+      isLoadingServiceTypes: serviceTypesHook.isLoading,
+      isLoadingCompanySizes: companySizesHook.isLoading,
+      isLoadingIndustries: industryTypesHook.isLoading,
+      isLoadingProvinces: regionsHook.isLoadingProvinces,
+      isLoadingCities: regionsHook.isLoadingCities,
+      selectedServiceType: serviceTypesHook.selectedServiceType,
+      selectedCompanySize: companySizesHook.selectedCompanySize,
+      selectedIndustries: industryTypesHook.selectedIndustries,
       companyName,
-      selectedProvince,
-      selectedCity,
+      selectedProvince: regionsHook.selectedProvince,
+      selectedCity: regionsHook.selectedCity,
       hasRecruitment,
       hasActiveQuota,
       hasReserveQuota
     },
     {
-      setSelectedServiceType,
-      setSelectedCompanySize,
-      setSelectedIndustries,
+      setSelectedServiceType: serviceTypesHook.setSelectedServiceType,
+      setSelectedCompanySize: companySizesHook.setSelectedCompanySize,
+      setSelectedIndustries: industryTypesHook.setSelectedIndustries,
       setCompanyName,
-      setSelectedProvince,
-      setSelectedCity,
+      setSelectedProvince: regionsHook.setSelectedProvince,
+      setSelectedCity: regionsHook.setSelectedCity,
       setHasRecruitment,
       setHasActiveQuota,
       setHasReserveQuota,
-      handleIndustryToggle,
-      handleToggleAllIndustries,
+      handleIndustryToggle: industryTypesHook.handleIndustryToggle,
+      handleToggleAllIndustries: industryTypesHook.handleToggleAllIndustries,
       resetForm
     }
   ];
-} 
+}
