@@ -158,18 +158,18 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* 검색폼 */}
-            <SearchForm onSearch={handleSearchWithUrl} initialQuery={searchParams.get('q') || ''} />
-
-            {/* 실시간 인기 검색어 - 가로 배치 */}
-            <div className={cn('mt-4')}>
+            {/* 실시간 인기 검색어 - 검색창 위 */}
+            <div className={cn('mb-4')}>
               <SearchRanking
                 onSelect={handleRankingSelect}
                 variant="horizontal"
-                limit={5}
-                title="🔥 실시간 인기 검색어"
+                limit={10}
+                title="인기 검색"
               />
             </div>
+
+            {/* 검색폼 */}
+            <SearchForm onSearch={handleSearchWithUrl} initialQuery={searchParams.get('q') || ''} />
           </div>
         )}
 
@@ -183,6 +183,16 @@ export default function HomePage() {
           )}>
             {/* 왼쪽: 검색 결과 영역 */}
             <div className={cn('flex-1 space-y-4 min-w-0')}>
+              {/* 모바일: 인기 검색어 (검색창 위) */}
+              <div className={cn('lg:hidden')}>
+                <SearchRanking
+                  onSelect={handleRankingSelect}
+                  variant="horizontal"
+                  limit={10}
+                  title="인기 검색"
+                />
+              </div>
+
               <SearchForm onSearch={handleSearchWithUrl} initialQuery={searchParams.get('q') || ''} />
 
               {error && (
@@ -214,10 +224,10 @@ export default function HomePage() {
               )}
             </div>
 
-            {/* 오른쪽: 사이드바 - 실시간 인기 검색어 */}
+            {/* 데스크톱: 사이드바 - 실시간 인기 검색어 */}
             <aside className={cn(
               // 너비
-              'w-full lg:w-64',
+              'w-full lg:w-72',
               // 반응형 표시
               'hidden lg:block',
               // 고정 위치
@@ -227,7 +237,7 @@ export default function HomePage() {
                 onSelect={handleRankingSelect}
                 variant="vertical"
                 limit={10}
-                title="🔥 실시간 인기 검색어"
+                title="인기 검색"
               />
             </aside>
           </div>

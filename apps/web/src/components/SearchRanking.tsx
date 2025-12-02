@@ -5,54 +5,56 @@ import { cn } from 'ui';
 import { useSearchRanking, RankItem } from '../hooks/useSearchRanking';
 
 /**
- * 순위 변동 아이콘 컴포넌트
+ * 순위 변동 아이콘
  */
-function RankChangeIcon({ change, amount }: { change: RankItem['change']; amount?: number }) {
+function RankChangeIndicator({ change, amount }: { change: RankItem['change']; amount?: number }) {
   switch (change) {
     case 'up':
       return (
-        <span className={cn('flex items-center text-red-500 text-[10px] font-medium')}>
-          <svg className={cn('w-3 h-3')} fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fillRule="evenodd"
-              d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z"
-              clipRule="evenodd"
-            />
+        <span className={cn('flex items-center gap-0.5 text-[11px] font-medium text-rose-500')}>
+          <svg className={cn('w-3 h-3')} viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 4l4 4H9v4H7V8H4l4-4z" />
           </svg>
-          {amount && <span>{amount}</span>}
+          {amount}
         </span>
       );
     case 'down':
       return (
-        <span className={cn('flex items-center text-blue-500 text-[10px] font-medium')}>
-          <svg className={cn('w-3 h-3')} fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fillRule="evenodd"
-              d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l2.293-2.293a1 1 0 011.414 0z"
-              clipRule="evenodd"
-            />
+        <span className={cn('flex items-center gap-0.5 text-[11px] font-medium text-blue-500')}>
+          <svg className={cn('w-3 h-3')} viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 12l-4-4h3V4h2v4h3l-4 4z" />
           </svg>
-          {amount && <span>{amount}</span>}
+          {amount}
         </span>
       );
     case 'new':
       return (
-        <span className={cn(
-          // 배지 스타일
-          'px-1 py-0.5 rounded text-[9px] font-bold',
-          // 색상
-          'bg-primary-100 text-primary-600'
-        )}>
+        <span className={cn('text-[10px] font-semibold text-orange-500')}>
           NEW
         </span>
       );
     default:
-      return (
-        <span className={cn('w-3 h-3 text-gray-300 flex items-center justify-center')}>
-          -
-        </span>
-      );
+      return null;
   }
+}
+
+/**
+ * 순위 숫자 표시
+ */
+function RankIcon({ rank }: { rank: number }) {
+  return (
+    <span className={cn(
+      // 폰트
+      'text-xs font-semibold tabular-nums',
+      // 순위별 색상
+      rank === 1 && 'text-orange-500',
+      rank === 2 && 'text-gray-400',
+      rank === 3 && 'text-amber-600',
+      rank > 3 && 'text-gray-400'
+    )}>
+      {rank}
+    </span>
+  );
 }
 
 /**
@@ -60,20 +62,11 @@ function RankChangeIcon({ change, amount }: { change: RankItem['change']; amount
  */
 function RankingSkeleton({ count = 5 }: { count?: number }) {
   return (
-    <div className={cn('space-y-2')}>
+    <div className={cn('space-y-1')}>
       {Array.from({ length: count }).map((_, i) => (
-        <div
-          key={i}
-          className={cn(
-            // 레이아웃
-            'flex items-center gap-2 px-2 py-1.5',
-            // 애니메이션
-            'animate-pulse'
-          )}
-        >
-          <div className={cn('w-4 h-4 bg-gray-200 rounded')} />
-          <div className={cn('flex-1 h-4 bg-gray-200 rounded')} />
-          <div className={cn('w-6 h-3 bg-gray-100 rounded')} />
+        <div key={i} className={cn('flex items-center gap-3 px-3 py-2.5 animate-pulse')}>
+          <div className={cn('w-6 h-6 bg-gray-100 rounded-md')} />
+          <div className={cn('flex-1 h-4 bg-gray-100 rounded')} />
         </div>
       ))}
     </div>
@@ -81,63 +74,60 @@ function RankingSkeleton({ count = 5 }: { count?: number }) {
 }
 
 /**
- * 검색 순위 아이템 컴포넌트
+ * 순위 아이템 컴포넌트 (세로)
  */
-interface RankItemProps {
-  item: RankItem;
-  onClick: (keyword: string) => void;
-  variant: 'horizontal' | 'vertical';
-}
-
-function RankItemComponent({ item, onClick, variant }: RankItemProps) {
-  const isHorizontal = variant === 'horizontal';
-
+function RankItemRow({ item, onClick }: { item: RankItem; onClick: (keyword: string) => void }) {
   return (
     <button
       type="button"
       onClick={() => onClick(item.keyword)}
       className={cn(
-        // 기본 스타일
-        'group flex items-center gap-2 transition-colors cursor-pointer',
-        // 호버 효과
-        'hover:bg-gray-50 rounded-md',
-        // 패딩
-        isHorizontal ? 'px-2 py-1' : 'px-2 py-1.5 w-full'
+        // 레이아웃
+        'group flex items-center gap-3 w-full px-3 py-2.5',
+        // 스타일
+        'rounded-lg transition-colors duration-150',
+        // 호버
+        'hover:bg-gray-100'
       )}
     >
-      {/* 순위 번호 */}
-      <span
-        className={cn(
-          // 기본 스타일
-          'flex-shrink-0 text-xs font-bold tabular-nums',
-          // 순위별 색상
-          item.rank === 1 && 'text-primary-600',
-          item.rank === 2 && 'text-primary-500',
-          item.rank === 3 && 'text-primary-400',
-          item.rank > 3 && 'text-gray-400',
-          // 크기
-          'w-4 text-center'
-        )}
-      >
-        {item.rank}
-      </span>
-
-      {/* 검색어 */}
-      <span
-        className={cn(
-          // 기본 스타일
-          'text-sm text-gray-700 truncate',
-          // 호버 효과
-          'group-hover:text-gray-900',
-          // 최대 너비
-          isHorizontal ? 'max-w-[100px]' : 'flex-1 text-left'
-        )}
-      >
+      <RankIcon rank={item.rank} />
+      <span className={cn('flex-1 text-left text-sm text-gray-700')}>
         {item.keyword}
       </span>
+      <RankChangeIndicator change={item.change} amount={item.changeAmount} />
+      <span className={cn(
+        'opacity-0 group-hover:opacity-100 transition-opacity text-gray-300'
+      )}>
+        <svg className={cn('w-4 h-4')} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+          <path d="M9 5l7 7-7 7" />
+        </svg>
+      </span>
+    </button>
+  );
+}
 
-      {/* 순위 변동 */}
-      <RankChangeIcon change={item.change} amount={item.changeAmount} />
+/**
+ * 마퀴 아이템 (흘러가는 효과용)
+ */
+function MarqueeItem({ item, onClick }: { item: RankItem; onClick: (keyword: string) => void }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(item.keyword)}
+      className={cn(
+        // 레이아웃
+        'inline-flex items-center gap-1.5 px-3 py-1',
+        // 호버
+        'hover:text-gray-900',
+        // 전환
+        'transition-colors duration-150 whitespace-nowrap'
+      )}
+    >
+      <RankIcon rank={item.rank} />
+      <span className={cn('text-sm text-gray-600')}>
+        {item.keyword}
+      </span>
+      <RankChangeIndicator change={item.change} amount={item.changeAmount} />
     </button>
   );
 }
@@ -161,7 +151,7 @@ export function SearchRanking({
   variant = 'vertical',
   limit = 10,
   className,
-  title = '실시간 인기 검색어',
+  title = '인기 검색',
 }: SearchRankingProps) {
   const { rankings, loading, error, updatedAt } = useSearchRanking({
     limit,
@@ -175,66 +165,97 @@ export function SearchRanking({
     return null;
   }
 
-  return (
-    <div
-      className={cn(
-        // 컨테이너 스타일
-        'bg-white',
-        // 가로/세로 레이아웃
-        isHorizontal ? '' : 'rounded-lg border border-gray-100 p-3',
-        className
-      )}
-    >
-      {/* 헤더 */}
-      <div
-        className={cn(
-          // 레이아웃
-          'flex items-center justify-between',
-          // 마진
-          isHorizontal ? 'mb-2' : 'mb-3'
+  // 가로 레이아웃 (마퀴 애니메이션)
+  if (isHorizontal) {
+    return (
+      <div className={cn('space-y-2', className)}>
+        {/* 섹션 헤더 */}
+        <div className={cn('flex items-center gap-2 px-1')}>
+          <span className={cn('text-xs font-medium text-gray-400')}>
+            {title}
+          </span>
+          <span className={cn('w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse')} />
+        </div>
+
+        {/* 마퀴 컨테이너 */}
+        {loading ? (
+          <div className={cn('flex gap-2 overflow-hidden')}>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className={cn('w-24 h-8 bg-gray-100 rounded-full animate-pulse flex-shrink-0')} />
+            ))}
+          </div>
+        ) : (
+          <div className={cn('relative overflow-hidden')}>
+            {/* 좌우 페이드 그라디언트 */}
+            <div className={cn(
+              'absolute left-0 top-0 bottom-0 w-8 z-10',
+              'bg-gradient-to-r from-[#fafafa] to-transparent pointer-events-none'
+            )} />
+            <div className={cn(
+              'absolute right-0 top-0 bottom-0 w-8 z-10',
+              'bg-gradient-to-l from-[#fafafa] to-transparent pointer-events-none'
+            )} />
+
+            {/* 마퀴 트랙 */}
+            <div className={cn('flex animate-marquee')}>
+              {/* 첫 번째 세트 */}
+              {rankings.slice(0, limit).map((item) => (
+                <MarqueeItem key={`a-${item.keyword}`} item={item} onClick={onSelect} />
+              ))}
+              {/* 두 번째 세트 (무한 루프용) */}
+              {rankings.slice(0, limit).map((item) => (
+                <MarqueeItem key={`b-${item.keyword}`} item={item} onClick={onSelect} />
+              ))}
+            </div>
+          </div>
         )}
-      >
-        <h3
-          className={cn(
-            // 텍스트 스타일
-            'text-xs font-medium text-gray-500'
-          )}
-        >
+
+        {/* 마퀴 CSS 애니메이션 */}
+        <style jsx>{`
+          @keyframes marquee {
+            0% {
+              transform: translateX(0);
+            }
+            100% {
+              transform: translateX(-50%);
+            }
+          }
+          .animate-marquee {
+            animation: marquee 20s linear infinite;
+          }
+          .animate-marquee:hover {
+            animation-play-state: paused;
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  // 세로 레이아웃
+  return (
+    <div className={cn(className)}>
+      {/* 섹션 헤더 */}
+      <div className={cn('flex items-center justify-between px-1 py-2')}>
+        <span className={cn('text-xs font-medium text-gray-400')}>
           {title}
-        </h3>
-        {updatedAt && !isHorizontal && (
+        </span>
+        {updatedAt && (
           <span className={cn('text-[10px] text-gray-300')}>
-            {updatedAt.toLocaleTimeString('ko-KR', {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
+            {updatedAt.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
           </span>
         )}
       </div>
 
-      {/* 로딩 상태 */}
-      {loading ? (
-        <RankingSkeleton count={isHorizontal ? 5 : limit} />
-      ) : (
-        <div
-          className={cn(
-            // 레이아웃
-            isHorizontal
-              ? 'flex flex-wrap items-center gap-1'
-              : 'space-y-0.5'
-          )}
-        >
-          {rankings.slice(0, isHorizontal ? 5 : limit).map((item) => (
-            <RankItemComponent
-              key={item.keyword}
-              item={item}
-              onClick={onSelect}
-              variant={variant}
-            />
-          ))}
-        </div>
-      )}
+      {/* 순위 목록 */}
+      <div>
+        {loading ? (
+          <RankingSkeleton count={limit} />
+        ) : (
+          rankings.slice(0, limit).map((item) => (
+            <RankItemRow key={item.keyword} item={item} onClick={onSelect} />
+          ))
+        )}
+      </div>
     </div>
   );
 }
-
