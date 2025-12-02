@@ -7,19 +7,14 @@ import { SearchFormOptions } from './SearchFormOptions';
 import { cn } from 'ui';
 
 interface AdvancedSearchFormProps {
-  // 데이터
   serviceTypes: ServiceType[];
   companySizes: CompanySize[];
   provinces: RegionType[];
   cities: CityType[];
-  
-  // 로딩 상태
   isLoadingServiceTypes: boolean;
   isLoadingCompanySizes: boolean;
   isLoadingProvinces: boolean;
   isLoadingCities: boolean;
-  
-  // 선택된 값
   selectedServiceType: string;
   selectedCompanySize: string;
   selectedProvince: string;
@@ -27,14 +22,10 @@ interface AdvancedSearchFormProps {
   hasRecruitment: boolean;
   hasActiveQuota: boolean;
   hasReserveQuota: boolean;
-  
-  // 업종 관련
   industries: IndustryType[];
   selectedIndustries: string[];
   isLoadingIndustries: boolean;
   isIndustriesExpanded: boolean;
-  
-  // 핸들러
   onServiceTypeChange: (value: string) => void;
   onCompanySizeChange: (value: string) => void;
   onProvinceChange: (value: string) => void;
@@ -48,57 +39,23 @@ interface AdvancedSearchFormProps {
   onReset: () => void;
   onSubmit: (e: React.FormEvent) => void;
   isValid: boolean;
-  
-  // UI 상태
   isOptionsExpanded: boolean;
   onToggleOptionsExpanded: () => void;
 }
 
-/**
- * 상세 검색 폼 컴포넌트
- */
 export const AdvancedSearchForm: React.FC<AdvancedSearchFormProps> = ({
-  serviceTypes,
-  companySizes,
-  provinces,
-  cities,
-  isLoadingServiceTypes,
-  isLoadingCompanySizes,
-  isLoadingProvinces,
-  isLoadingCities,
-  selectedServiceType,
-  selectedCompanySize,
-  selectedProvince,
-  selectedCity,
-  hasRecruitment,
-  hasActiveQuota,
-  hasReserveQuota,
-  industries,
-  selectedIndustries,
-  isLoadingIndustries,
-  isIndustriesExpanded,
-  onServiceTypeChange,
-  onCompanySizeChange,
-  onProvinceChange,
-  onCityChange,
-  onRecruitmentChange,
-  onActiveQuotaChange,
-  onReserveQuotaChange,
-  onIndustryToggle,
-  onToggleAllIndustries,
-  onToggleIndustriesExpanded,
-  onReset,
-  onSubmit,
-  isValid,
-  isOptionsExpanded,
-  onToggleOptionsExpanded,
+  serviceTypes, companySizes, provinces, cities,
+  isLoadingServiceTypes, isLoadingCompanySizes, isLoadingProvinces, isLoadingCities,
+  selectedServiceType, selectedCompanySize, selectedProvince, selectedCity,
+  hasRecruitment, hasActiveQuota, hasReserveQuota,
+  industries, selectedIndustries, isLoadingIndustries, isIndustriesExpanded,
+  onServiceTypeChange, onCompanySizeChange, onProvinceChange, onCityChange,
+  onRecruitmentChange, onActiveQuotaChange, onReserveQuotaChange,
+  onIndustryToggle, onToggleAllIndustries, onToggleIndustriesExpanded,
+  onReset, onSubmit, isValid, isOptionsExpanded, onToggleOptionsExpanded,
 }) => {
   return (
-    <form onSubmit={onSubmit} className={cn(
-      // 폼 컨테이너
-      'space-y-4 sm:space-y-6 bg-white p-4 sm:p-6 rounded-lg shadow-md'
-    )}>
-      {/* 기본 검색 필드 */}
+    <form onSubmit={onSubmit} className={cn('space-y-4')}>
       <SearchFormFields
         serviceTypes={serviceTypes}
         companySizes={companySizes}
@@ -118,7 +75,6 @@ export const AdvancedSearchForm: React.FC<AdvancedSearchFormProps> = ({
         onCityChange={onCityChange}
       />
 
-      {/* 추가 옵션 */}
       <SearchFormOptions
         hasRecruitment={hasRecruitment}
         hasActiveQuota={hasActiveQuota}
@@ -130,7 +86,6 @@ export const AdvancedSearchForm: React.FC<AdvancedSearchFormProps> = ({
         onToggleExpanded={onToggleOptionsExpanded}
       />
 
-      {/* 업종 선택 */}
       {selectedServiceType && (
         <IndustrySelector
           industries={industries}
@@ -143,27 +98,12 @@ export const AdvancedSearchForm: React.FC<AdvancedSearchFormProps> = ({
         />
       )}
 
-      {/* 액션 버튼 */}
-      <div className={cn('flex justify-end space-x-2 sm:space-x-4')}>
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={onReset} 
-          size="sm" 
-          className={cn('text-xs sm:text-sm')}
-        >
+      <div className={cn('flex justify-end gap-2 pt-2')}>
+        <Button type="button" variant="ghost" size="sm" onClick={onReset}>
           초기화
         </Button>
-        <Button 
-          type="submit" 
-          disabled={!isValid || isLoadingServiceTypes || isLoadingIndustries}
-          className={cn(
-            'text-xs sm:text-sm',
-            !isValid ? "opacity-50 cursor-not-allowed" : ""
-          )}
-          size="sm"
-        >
-          상세 검색
+        <Button type="submit" size="sm" disabled={!isValid || isLoadingServiceTypes || isLoadingIndustries}>
+          검색
         </Button>
       </div>
     </form>

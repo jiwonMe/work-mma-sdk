@@ -13,120 +13,56 @@ interface SearchFormOptionsProps {
   onToggleExpanded: () => void;
 }
 
-/**
- * 검색 옵션 컴포넌트 (채용, 배정인원 등)
- */
 export const SearchFormOptions: React.FC<SearchFormOptionsProps> = ({
-  hasRecruitment,
-  hasActiveQuota,
-  hasReserveQuota,
-  onRecruitmentChange,
-  onActiveQuotaChange,
-  onReserveQuotaChange,
-  isExpanded,
-  onToggleExpanded,
+  hasRecruitment, hasActiveQuota, hasReserveQuota,
+  onRecruitmentChange, onActiveQuotaChange, onReserveQuotaChange,
+  isExpanded, onToggleExpanded,
 }) => {
+  const activeCount = [hasRecruitment, hasActiveQuota, hasReserveQuota].filter(Boolean).length;
+
   return (
-    <div className={cn(
-      // 옵션 컨테이너
-      'border border-slate-200 rounded-md overflow-hidden'
-    )}>
+    <div className={cn('border border-gray-100 rounded-lg overflow-hidden')}>
       <button
         type="button"
-        className={cn(
-          // 헤더 버튼 스타일
-          'w-full px-3 py-2 sm:px-4 sm:py-3 flex justify-between items-center bg-slate-50 hover:bg-slate-100 text-left transition-colors'
-        )}
         onClick={onToggleExpanded}
+        className={cn(
+          'w-full px-3 py-2.5 flex justify-between items-center',
+          'bg-gray-50/50 hover:bg-gray-50 transition-colors text-left'
+        )}
       >
-        <div className={cn('flex items-center')}>
-          <span className={cn(
-            // 레이블 텍스트
-            'text-xs sm:text-sm font-medium'
-          )}>추가 옵션</span>
-          {(hasRecruitment || hasActiveQuota || hasReserveQuota) && (
-            <span className={cn(
-              // 선택된 옵션 배지
-              'ml-2 px-1.5 py-0.5 sm:px-2 bg-blue-100 text-blue-800 text-xs rounded-full'
-            )}>
-              {[
-                hasRecruitment && '채용중',
-                hasActiveQuota && '현역',
-                hasReserveQuota && '보충역'
-              ].filter(Boolean).join(', ')}
-            </span>
+        <div className={cn('flex items-center gap-2')}>
+          <svg className={cn('h-4 w-4 text-gray-400')} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+          </svg>
+          <span className={cn('text-sm text-gray-600')}>추가 옵션</span>
+          {activeCount > 0 && (
+            <span className={cn('badge-success text-[10px] px-1.5 py-0.5')}>{activeCount}</span>
           )}
         </div>
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          className={cn(
-            // 화살표 아이콘
-            'h-4 w-4 sm:h-5 sm:w-5 transition-transform duration-200',
-            // 확장 시 회전
-            isExpanded ? 'transform rotate-180' : ''
-          )} 
-          fill="none" 
-          viewBox="0 0 24 24" 
-          stroke="currentColor"
+        <svg
+          className={cn('h-4 w-4 text-gray-400 transition-transform', isExpanded && 'rotate-180')}
+          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
         >
-          <path 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            strokeWidth={2} 
-            d="M19 9l-7 7-7-7" 
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
         </svg>
       </button>
-      
+
       {isExpanded && (
-        <div className={cn(
-          // 확장 영역
-          'p-3 sm:p-4 border-t border-slate-200'
-        )}>
-          <div className={cn(
-            // 옵션 그리드
-            'flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-4'
-          )}>
-            <div className={cn(
-              // 옵션 항목 컨테이너
-              'flex items-center space-x-2 bg-slate-50 p-2 rounded-md'
-            )}>
-              <Checkbox
-                id="hasRecruitment"
-                checked={hasRecruitment}
-                onCheckedChange={(checked) => onRecruitmentChange(checked === true)}
-                className={cn('h-3.5 w-3.5 sm:h-4 sm:w-4')}
-              />
-              <label htmlFor="hasRecruitment" className={cn('text-xs sm:text-sm')}>
-                채용공고 등록업체
+        <div className={cn('px-3 py-3 border-t border-gray-100 animate-fade-in')}>
+          <div className={cn('grid grid-cols-1 sm:grid-cols-3 gap-2')}>
+            {[
+              { id: 'hasRecruitment', label: '채용공고 등록업체', checked: hasRecruitment, onChange: onRecruitmentChange },
+              { id: 'hasActiveQuota', label: '현역 배정인원', checked: hasActiveQuota, onChange: onActiveQuotaChange },
+              { id: 'hasReserveQuota', label: '보충역 배정인원', checked: hasReserveQuota, onChange: onReserveQuotaChange },
+            ].map(({ id, label, checked, onChange }) => (
+              <label key={id} className={cn('flex items-center gap-2 p-2 rounded hover:bg-gray-50 cursor-pointer')}>
+                <Checkbox id={id} checked={checked} onCheckedChange={(c) => onChange(c === true)} />
+                <span className={cn('text-sm text-gray-600')}>{label}</span>
               </label>
-            </div>
-            <div className={cn('flex items-center space-x-2 bg-slate-50 p-2 rounded-md')}>
-              <Checkbox
-                id="hasActiveQuota"
-                checked={hasActiveQuota}
-                onCheckedChange={(checked) => onActiveQuotaChange(checked === true)}
-                className={cn('h-3.5 w-3.5 sm:h-4 sm:w-4')}
-              />
-              <label htmlFor="hasActiveQuota" className={cn('text-xs sm:text-sm')}>
-                현역 배정인원
-              </label>
-            </div>
-            <div className={cn('flex items-center space-x-2 bg-slate-50 p-2 rounded-md')}>
-              <Checkbox
-                id="hasReserveQuota"
-                checked={hasReserveQuota}
-                onCheckedChange={(checked) => onReserveQuotaChange(checked === true)}
-                className={cn('h-3.5 w-3.5 sm:h-4 sm:w-4')}
-              />
-              <label htmlFor="hasReserveQuota" className={cn('text-xs sm:text-sm')}>
-                보충역 배정인원
-              </label>
-            </div>
+            ))}
           </div>
         </div>
       )}
     </div>
   );
 };
-

@@ -11,141 +11,64 @@ interface CompanyTableProps {
   onSelect: (company: Company) => void;
 }
 
-/**
- * 데스크톱용 업체 테이블 컴포넌트
- */
-export const CompanyTable: React.FC<CompanyTableProps> = ({ 
-  searchResult, 
-  selectedCompany, 
-  onSelect 
-}) => {
+export const CompanyTable: React.FC<CompanyTableProps> = ({ searchResult, selectedCompany, onSelect }) => {
   return (
-    <div className={cn(
-      // 테이블 컨테이너
-      'hidden sm:block overflow-x-auto'
-    )}>
-      <table className={cn('w-full border-collapse')}>
+    <div className={cn('hidden sm:block')}>
+      <table className={cn('w-full')}>
         <thead>
-          <tr className={cn(
-            // 테이블 헤더 배경
-            'bg-slate-50'
-          )}>
-            <th className={cn(
-              // 헤더 셀 기본 스타일
-              'py-3 px-4 text-left text-sm font-medium text-slate-700'
-            )}>업체명</th>
-            <th className={cn(
-              // 선정년도 컬럼 (중간 크기 이상에서만 표시)
-              'py-3 px-4 text-center text-sm font-medium text-slate-700 hidden md:table-cell'
-            )}>
-              선정년도
-            </th>
-            <th className={cn(
-              // 지방청 컬럼
-              'py-3 px-4 text-center text-sm font-medium text-slate-700'
-            )}>
-              지방청
-            </th>
-            <th className={cn(
-              // 채용유무 컬럼
-              'py-3 px-4 text-center text-sm font-medium text-slate-700'
-            )}>채용유무</th>
-            <th className={cn(
-              // 상세 컬럼
-              'py-3 px-4 text-center text-sm font-medium text-slate-700 w-24'
-            )}>상세</th>
+          <tr className={cn('border-b border-gray-100 bg-gray-50/50')}>
+            <th className={cn('py-2.5 px-4 text-left text-xs font-medium text-gray-500')}>업체명</th>
+            <th className={cn('py-2.5 px-4 text-center text-xs font-medium text-gray-500 hidden md:table-cell')}>선정년도</th>
+            <th className={cn('py-2.5 px-4 text-center text-xs font-medium text-gray-500')}>지방청</th>
+            <th className={cn('py-2.5 px-4 text-center text-xs font-medium text-gray-500')}>채용</th>
+            <th className={cn('py-2.5 px-4 w-12')}></th>
           </tr>
         </thead>
-        <tbody className={cn(
-          // 테이블 바디 구분선
-          'divide-y divide-slate-200'
-        )}>
+        <tbody className={cn('divide-y divide-gray-100')}>
           {searchResult.companies.map((company: Company, index) => (
             <React.Fragment key={company.code || index}>
-              <tr className={cn(
-                // 행 기본 스타일
-                'hover:bg-slate-50',
-                // 선택된 행 강조
-                selectedCompany === company ? 'bg-slate-50' : ''
-              )}>
-                <td className={cn(
-                  // 업체명 셀
-                  'py-3 px-4 text-sm font-medium'
-                )}>
-                  <a 
-                    href={getWantedSearchUrl(company.name)} 
-                    target="_blank" 
+              <tr className={cn('hover:bg-gray-50/50 transition-colors', selectedCompany === company && 'bg-primary-50/50')}>
+                <td className={cn('py-2.5 px-4')}>
+                  <a
+                    href={getWantedSearchUrl(company.name)}
+                    target="_blank"
                     rel="noopener noreferrer"
-                    className={cn(
-                      // 링크 스타일
-                      'text-blue-600 hover:text-blue-800 hover:underline'
-                    )}
+                    className={cn('text-sm text-gray-800 hover:text-primary-600 transition-colors')}
                   >
                     {company.name}
                   </a>
                 </td>
-                <td className={cn(
-                  // 선정년도 셀
-                  'py-3 px-4 text-sm text-center text-slate-600 hidden md:table-cell'
-                )}>
+                <td className={cn('py-2.5 px-4 text-center text-sm text-gray-500 hidden md:table-cell')}>
                   {company.selectionYear || '-'}
                 </td>
-                <td className={cn(
-                  // 지방청 셀
-                  'py-3 px-4 text-sm text-center text-slate-600'
-                )}>
+                <td className={cn('py-2.5 px-4 text-center text-sm text-gray-500')}>
                   {company.regionalOffice || '-'}
                 </td>
-                <td className={cn('py-3 px-4 text-center')}>
+                <td className={cn('py-2.5 px-4 text-center')}>
                   {company.isRecruiting ? (
-                    <span className={cn(
-                      // 모집중 배지
-                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800'
-                    )}>
-                      모집중
-                    </span>
+                    <span className={cn('badge-success')}>모집중</span>
                   ) : (
-                    <span className={cn(
-                      // 미모집 텍스트
-                      'text-sm text-slate-500'
-                    )}>-</span>
+                    <span className={cn('text-sm text-gray-400')}>-</span>
                   )}
                 </td>
-                <td className={cn('py-3 px-4 text-center')}>
+                <td className={cn('py-2.5 px-4 text-center')}>
                   <button
                     onClick={() => onSelect(company)}
-                    className={cn(
-                      // 상세 정보 토글 버튼
-                      'inline-flex items-center justify-center p-1 rounded-md hover:bg-slate-200 transition-colors'
-                    )}
-                    title="상세 정보 보기"
+                    className={cn('p-1 rounded hover:bg-gray-100 transition-colors')}
                   >
                     <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className={cn(
-                        // 아이콘 스타일
-                        'h-5 w-5',
-                        // 선택된 경우 회전
-                        selectedCompany === company ? 'text-blue-500 transform rotate-180' : 'text-slate-500'
-                      )}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+                      className={cn('h-4 w-4 text-gray-400 transition-transform', selectedCompany === company && 'rotate-180 text-primary-500')}
+                      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
                     >
-                      <path 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        strokeWidth={2} 
-                        d="M19 9l-7 7-7-7" 
-                      />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
                 </td>
               </tr>
               {selectedCompany === company && (
                 <tr>
-                  <td colSpan={5} className={cn('bg-slate-50 p-4')}>
-                    <CompanyDetailsView company={selectedCompany} isMobile={false} />
+                  <td colSpan={5} className={cn('bg-gray-50/50 px-4 py-3')}>
+                    <CompanyDetailsView company={selectedCompany} />
                   </td>
                 </tr>
               )}
@@ -156,4 +79,3 @@ export const CompanyTable: React.FC<CompanyTableProps> = ({
     </div>
   );
 };
-

@@ -4,12 +4,64 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    font-family: "Wanted Sans Variable", "Wanted Sans", -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+    font-family: "Wanted Sans Variable", "Wanted Sans", -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
   }
-
+  
   body {
-    @apply bg-slate-50 text-slate-900;
+    @apply bg-white text-gray-800;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-} 
+  
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-200 rounded-full;
+  }
+}
+
+@layer components {
+  .badge-success {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium;
+    background-color: #dcfce7;
+    color: #15803d;
+  }
+  
+  .badge-warning {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium;
+    background-color: #fef3c7;
+    color: #b45309;
+  }
+  
+  .badge-info {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium;
+    background-color: #e0f2fe;
+    color: #0369a1;
+  }
+  
+  .badge-pink {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium;
+    background-color: #fce7f3;
+    color: #be185d;
+  }
+  
+  .badge-neutral {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium;
+    background-color: #f4f4f5;
+    color: #52525b;
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.15s ease-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}
