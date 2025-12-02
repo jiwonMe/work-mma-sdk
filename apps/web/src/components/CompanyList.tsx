@@ -50,6 +50,10 @@ const CompanyList: React.FC<CompanyListProps> = ({ searchResult, loading, onPage
           <span className={cn('font-medium text-gray-800')}>총 {searchResult.totalCount.toLocaleString()}건</span>
           <span className={cn('text-gray-400')}>({searchResult.currentPage}/{searchResult.totalPages} 페이지)</span>
         </div>
+        <div className={cn('flex items-center gap-1 text-xs text-gray-400')}>
+          <span>회사명 클릭 →</span>
+          <span className={cn('text-blue-500')}>wanted</span>
+        </div>
       </div>
 
       {/* Mobile */}
