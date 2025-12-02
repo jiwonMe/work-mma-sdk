@@ -167,6 +167,9 @@ export function SearchRanking({
 
   // 가로 레이아웃 (마퀴 애니메이션)
   if (isHorizontal) {
+    // 끊김 없는 무한 루프를 위해 아이템을 4번 복제
+    const displayItems = rankings.slice(0, limit);
+
     return (
       <div className={cn('space-y-2', className)}>
         {/* 섹션 헤더 */}
@@ -196,35 +199,46 @@ export function SearchRanking({
               'bg-gradient-to-l from-[#fafafa] to-transparent pointer-events-none'
             )} />
 
-            {/* 마퀴 트랙 */}
-            <div className={cn('flex animate-marquee')}>
-              {/* 첫 번째 세트 */}
-              {rankings.slice(0, limit).map((item) => (
-                <MarqueeItem key={`a-${item.keyword}`} item={item} onClick={onSelect} />
-              ))}
-              {/* 두 번째 세트 (무한 루프용) */}
-              {rankings.slice(0, limit).map((item) => (
-                <MarqueeItem key={`b-${item.keyword}`} item={item} onClick={onSelect} />
-              ))}
+            {/* 마퀴 트랙 - 끊김 없는 무한 루프 */}
+            <div className={cn('marquee-track')}>
+              <div className={cn('marquee-content')}>
+                {/* 아이템 세트를 4번 복제하여 끊김 방지 */}
+                {[0, 1, 2, 3].map((setIndex) => (
+                  <React.Fragment key={setIndex}>
+                    {displayItems.map((item) => (
+                      <MarqueeItem 
+                        key={`${setIndex}-${item.keyword}`} 
+                        item={item} 
+                        onClick={onSelect} 
+                      />
+                    ))}
+                  </React.Fragment>
+                ))}
+              </div>
             </div>
           </div>
         )}
 
-        {/* 마퀴 CSS 애니메이션 */}
+        {/* 마퀴 CSS 애니메이션 - 끊김 없는 무한 루프 */}
         <style jsx>{`
-          @keyframes marquee {
+          .marquee-track {
+            display: flex;
+            overflow: hidden;
+          }
+          .marquee-content {
+            display: flex;
+            animation: marquee-scroll 30s linear infinite;
+          }
+          .marquee-content:hover {
+            animation-play-state: paused;
+          }
+          @keyframes marquee-scroll {
             0% {
               transform: translateX(0);
             }
             100% {
               transform: translateX(-50%);
             }
-          }
-          .animate-marquee {
-            animation: marquee 20s linear infinite;
-          }
-          .animate-marquee:hover {
-            animation-play-state: paused;
           }
         `}</style>
       </div>
