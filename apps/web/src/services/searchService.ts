@@ -43,8 +43,8 @@ export async function searchCompanies(
         pageIndex: params.pageIndex || 1,
       });
 
-      // 검색어 순위 기록 (비동기, 실패해도 검색 결과에 영향 없음)
-      if (params.eopche_nm) {
+      // 검색어 순위 기록 - 검색 결과가 있는 경우에만 (비동기, 실패해도 검색 결과에 영향 없음)
+      if (params.eopche_nm && result.totalCount > 0) {
         recordSearchKeyword(params.eopche_nm).catch(() => {});
       }
     }
