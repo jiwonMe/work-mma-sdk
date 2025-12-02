@@ -4,6 +4,7 @@ import { CompanyDetails } from '../types/company';
 import { getWantedSearchUrl } from '../utils/company';
 import { CompanyDetailsView } from './CompanyDetails';
 import { cn } from 'ui';
+import { ServiceTypeBadge } from './ServiceTypeBadge';
 
 interface CompanyCardProps {
   company: Company;
@@ -16,14 +17,18 @@ export const CompanyCard: React.FC<CompanyCardProps> = ({ company, isSelected, o
     <div className={cn('p-4')}>
       <div className={cn('flex justify-between items-start')}>
         <div className={cn('min-w-0 flex-1')}>
-          <a
-            href={getWantedSearchUrl(company.name)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={cn('text-sm font-medium text-gray-800 hover:text-primary-600 transition-colors')}
-          >
-            {company.name}
-          </a>
+          <div className={cn('flex items-center gap-1.5 flex-wrap')}>
+            {/* 복무형태 badge */}
+            <ServiceTypeBadge serviceType={company.serviceType} />
+            <a
+              href={getWantedSearchUrl(company.name)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn('text-sm font-medium text-gray-800 hover:text-primary-600 transition-colors')}
+            >
+              {company.name}
+            </a>
+          </div>
           <p className={cn('text-xs text-gray-400 mt-0.5')}>{company.regionalOffice || '-'}</p>
         </div>
         <div className={cn('flex items-center gap-2 ml-3')}>

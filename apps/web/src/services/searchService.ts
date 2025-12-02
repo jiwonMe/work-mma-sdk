@@ -1,6 +1,14 @@
-import { MMAClient, CompanySearchParams, SearchResult } from 'mma-sdk';
+import { MMAClient, CompanySearchParams, SearchResult, Company, ServiceTypeCode } from 'mma-sdk';
 import { trackSearch, trackSearchError } from '../utils/analytics';
 import { recordSearchKeyword } from '../hooks/useSearchRanking';
+
+// 복무형태 코드 상수
+const SERVICE_TYPE_CODES = {
+  // 산업기능요원
+  INDUSTRIAL: '1',
+  // 전문연구요원/전문기능요원
+  PROFESSIONAL: '2',
+} as const;
 
 export interface SearchState {
   searchResult: SearchResult | null;
@@ -18,7 +26,85 @@ export interface SearchCallbacks {
 }
 
 /**
+ * 단일 복무형태로 검색
+ */
+async function searchByServiceType(
+  client: MMAClient,
+  params: CompanySearchParams,
+  serviceTypeCode: string,
+  serviceType: ServiceTypeCode
+): Promise<Company[]> {
+  const result = await client.searchCompanies({
+    ...params,
+    eopjong_gbcd: serviceTypeCode,
+  });
+  
+  // 각 회사에 복무형태 태깅
+  return result.companies.map(company => ({
+    ...company,
+    serviceType,
+  }));
+}
+
+/**
+ * 산업기능요원과 전문기능요원 모두 병렬 검색 후 결과 병합
+ */
+async function searchBothServiceTypes(
+  client: MMAClient,
+  params: CompanySearchParams
+): Promise<SearchResult> {
+  // 산업기능요원, 전문기능요원 병렬 검색
+  const [industrialCompanies, professionalCompanies] = await Promise.all([
+    searchByServiceType(
+      client,
+      params,
+      SERVICE_TYPE_CODES.INDUSTRIAL,
+      'industrial'
+    ),
+    searchByServiceType(
+      client,
+      params,
+      SERVICE_TYPE_CODES.PROFESSIONAL,
+      'professional'
+    ),
+  ]);
+
+  // 결과 병합 - 중복 제거 (code 기준)
+  const companyMap = new Map<string, Company>();
+  
+  // 산업기능요원 먼저 추가
+  industrialCompanies.forEach(company => {
+    const key = company.code || company.name;
+    companyMap.set(key, company);
+  });
+  
+  // 전문기능요원 추가 (중복 시 both로 표시하거나 기존 유지)
+  professionalCompanies.forEach(company => {
+    const key = company.code || company.name;
+    if (!companyMap.has(key)) {
+      companyMap.set(key, company);
+    }
+  });
+
+  const companies = Array.from(companyMap.values());
+  
+  // 총 개수는 두 결과의 합이 아닌 실제 병합된 결과 수
+  const totalCount = companies.length;
+  const pageSize = 10;
+  const totalPages = Math.ceil(totalCount / pageSize) || 1;
+  const currentPage = params.pageIndex || 1;
+
+  return {
+    totalCount,
+    currentPage,
+    totalPages,
+    companies,
+  };
+}
+
+/**
  * Search for companies using MMA SDK
+ * 산업기능요원과 전문기능요원 모두 검색
  */
 export async function searchCompanies(
   params: CompanySearchParams,
@@ -32,13 +118,14 @@ export async function searchCompanies(
       proxyUrl: typeof window !== 'undefined' ? window.location.origin : undefined
     });
     
-    const result = await client.searchCompanies(params);
+    // 산업기능요원 + 전문기능요원 모두 검색
+    const result = await searchBothServiceTypes(client, params);
     
     // Track successful search with Vercel Analytics
     if (result) {
       trackSearch({
         searchTerm: params.eopche_nm || '',
-        serviceType: params.eopjong_gbcd,
+        serviceType: 'both',
         resultCount: result.totalCount,
         pageIndex: params.pageIndex || 1,
       });

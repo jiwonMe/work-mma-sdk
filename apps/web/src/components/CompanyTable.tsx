@@ -3,6 +3,7 @@ import { Company, SearchResult } from 'mma-sdk';
 import { CompanyDetails } from '../types/company';
 import { getWantedSearchUrl } from '../utils/company';
 import { CompanyDetailsView } from './CompanyDetails';
+import { ServiceTypeBadge } from './ServiceTypeBadge';
 import { cn } from 'ui';
 
 interface CompanyTableProps {
@@ -29,14 +30,18 @@ export const CompanyTable: React.FC<CompanyTableProps> = ({ searchResult, select
             <React.Fragment key={company.code || index}>
               <tr className={cn('hover:bg-gray-50/50 transition-colors', selectedCompany === company && 'bg-primary-50/50')}>
                 <td className={cn('py-2.5 px-4')}>
-                  <a
-                    href={getWantedSearchUrl(company.name)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={cn('text-sm text-gray-800 hover:text-primary-600 transition-colors')}
-                  >
-                    {company.name}
-                  </a>
+                  <div className={cn('flex items-center gap-1.5')}>
+                    {/* 복무형태 badge */}
+                    <ServiceTypeBadge serviceType={company.serviceType} />
+                    <a
+                      href={getWantedSearchUrl(company.name)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn('text-sm text-gray-800 hover:text-primary-600 transition-colors')}
+                    >
+                      {company.name}
+                    </a>
+                  </div>
                 </td>
                 <td className={cn('py-2.5 px-4 text-center text-sm text-gray-500 hidden md:table-cell')}>
                   {company.selectionYear || '-'}

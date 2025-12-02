@@ -53,6 +53,20 @@
     background-color: #f4f4f5;
     color: #52525b;
   }
+  
+  /* 산업기능요원 badge - 블루 계열 */
+  .badge-industrial {
+    @apply inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold;
+    background-color: #dbeafe;
+    color: #1d4ed8;
+  }
+  
+  /* 전문연구요원/전문기능요원 badge - 퍼플 계열 */
+  .badge-professional {
+    @apply inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold;
+    background-color: #ede9fe;
+    color: #7c3aed;
+  }
 }
 
 @layer utilities {

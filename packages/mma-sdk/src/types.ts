@@ -38,12 +38,21 @@ export interface CompanySearchParams {
   pageIndex?: number; // Page number
 }
 
+/**
+ * 복무형태 타입
+ * - industrial: 산업기능요원
+ * - professional: 전문연구요원/전문기능요원
+ */
+export type ServiceTypeCode = 'industrial' | 'professional';
+
 export interface Company {
   name: string;
   code?: string;
   selectionYear?: string;
   regionalOffice?: string;
   isRecruiting?: boolean;
+  // 복무형태 (산업기능요원/전문기능요원)
+  serviceType?: ServiceTypeCode;
 }
 
 export interface SearchResult {
