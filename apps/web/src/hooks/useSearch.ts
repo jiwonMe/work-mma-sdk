@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { CompanySearchParams, SearchResult } from 'mma-sdk';
 import { searchCompanies, createSearchParamsWithPage, SearchState } from '../services/searchService';
+import { trackPagination } from '../utils/analytics';
 
 /**
  * Hook for managing search state and operations
@@ -55,6 +56,9 @@ export function useSearch(): [
   // Handle page change
   const handlePageChange = useCallback((page: number) => {
     if (state.searchParams) {
+      // Track pagination event
+      trackPagination(page, state.searchParams.eopche_nm);
+      
       const newParams = createSearchParamsWithPage(state.searchParams, page);
       if (newParams) {
         handleSearch(newParams);

@@ -76,11 +76,11 @@ function RankingSkeleton({ count = 5 }: { count?: number }) {
 /**
  * 순위 아이템 컴포넌트 (세로)
  */
-function RankItemRow({ item, onClick }: { item: RankItem; onClick: (keyword: string) => void }) {
+function RankItemRow({ item, onClick }: { item: RankItem; onClick: (keyword: string, rank?: number) => void }) {
   return (
     <button
       type="button"
-      onClick={() => onClick(item.keyword)}
+      onClick={() => onClick(item.keyword, item.rank)}
       className={cn(
         // 레이아웃
         'group flex items-center gap-3 w-full px-3 py-2.5',
@@ -109,11 +109,11 @@ function RankItemRow({ item, onClick }: { item: RankItem; onClick: (keyword: str
 /**
  * 마퀴 아이템 (흘러가는 효과용)
  */
-function MarqueeItem({ item, onClick }: { item: RankItem; onClick: (keyword: string) => void }) {
+function MarqueeItem({ item, onClick }: { item: RankItem; onClick: (keyword: string, rank?: number) => void }) {
   return (
     <button
       type="button"
-      onClick={() => onClick(item.keyword)}
+      onClick={() => onClick(item.keyword, item.rank)}
       className={cn(
         // 레이아웃
         'inline-flex items-center gap-1.5 px-3 py-1',
@@ -136,7 +136,7 @@ function MarqueeItem({ item, onClick }: { item: RankItem; onClick: (keyword: str
  * 검색 순위 컴포넌트 Props
  */
 interface SearchRankingProps {
-  onSelect: (keyword: string) => void;
+  onSelect: (keyword: string, rank?: number) => void;
   variant?: 'horizontal' | 'vertical';
   limit?: number;
   className?: string;

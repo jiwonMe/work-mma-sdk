@@ -8,6 +8,7 @@ import CompanyList from '../components/CompanyList';
 import { SearchRanking } from '../components/SearchRanking';
 import { useSearch } from '../hooks';
 import { cn } from 'ui';
+import { trackRankingKeywordClick, trackShare, trackPagination } from '../utils/analytics';
 
 export default function HomePage() {
   const router = useRouter();
@@ -39,7 +40,12 @@ export default function HomePage() {
   };
 
   // 인기 검색어 클릭 핸들러
-  const handleRankingSelect = (keyword: string) => {
+  const handleRankingSelect = (keyword: string, rank?: number) => {
+    // Track ranking keyword click event
+    if (rank !== undefined) {
+      trackRankingKeywordClick(keyword, rank);
+    }
+    
     router.push(`/?q=${encodeURIComponent(keyword)}`, { scroll: false });
     handleSearch({
       eopjong_gbcd: '',
@@ -52,6 +58,11 @@ export default function HomePage() {
   // 공유 버튼 클릭 핸들러
   const handleShare = async () => {
     const url = window.location.href;
+    const currentQuery = searchParams.get('q') || '';
+    
+    // Track share event
+    trackShare(currentQuery);
+    
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);

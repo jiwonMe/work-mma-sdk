@@ -36,11 +36,12 @@ export async function searchCompanies(
     
     // Track successful search with Vercel Analytics
     if (result) {
-      trackSearch(
-        params.eopjong_gbcd || 'unknown',
-        result.companies.length,
-        params
-      );
+      trackSearch({
+        searchTerm: params.eopche_nm || '',
+        serviceType: params.eopjong_gbcd,
+        resultCount: result.totalCount,
+        pageIndex: params.pageIndex || 1,
+      });
 
       // 검색어 순위 기록 (비동기, 실패해도 검색 결과에 영향 없음)
       if (params.eopche_nm) {
@@ -65,7 +66,7 @@ export async function searchCompanies(
     console.error('Search failed:', error);
     
     // Track search error with Vercel Analytics
-    trackSearchError(error, params);
+    trackSearchError(error, params.eopche_nm);
     
     callbacks?.onSearchError?.(error);
     return null;

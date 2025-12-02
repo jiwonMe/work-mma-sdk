@@ -6,6 +6,7 @@ import { useSearchHistory } from '../hooks/useSearchHistory';
 import { QuickSearchForm } from './QuickSearchForm';
 import { AdvancedSearchForm } from './AdvancedSearchForm';
 import { cn } from 'ui';
+import { trackTabSwitch, trackSearchHistoryUsed } from '../utils/analytics';
 
 interface SearchFormProps {
   onSearch: (params: CompanySearchParams) => void;
@@ -59,8 +60,16 @@ const SearchForm: React.FC<SearchFormProps> = ({ onSearch, initialQuery }) => {
   };
 
   const handleHistorySelect = (term: string) => {
+    // Track search history usage event
+    trackSearchHistoryUsed(term);
     formActions.setCompanyName(term);
     onSearch(createSearchParams(term));
+  };
+
+  const handleTabChange = (tab: 'quick' | 'advanced') => {
+    // Track tab switch event
+    trackTabSwitch(tab);
+    setActiveTab(tab);
   };
 
   const isFormValid = isSearchParamsValid({
@@ -86,7 +95,7 @@ const SearchForm: React.FC<SearchFormProps> = ({ onSearch, initialQuery }) => {
         <div className={cn('flex items-center gap-1 px-3 pt-3')}>
           <button
             type="button"
-            onClick={() => setActiveTab('quick')}
+            onClick={() => handleTabChange('quick')}
             className={cn(
               'px-3 py-1.5 text-xs rounded-md transition-colors',
               activeTab === 'quick'
@@ -98,7 +107,7 @@ const SearchForm: React.FC<SearchFormProps> = ({ onSearch, initialQuery }) => {
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab('advanced')}
+            onClick={() => handleTabChange('advanced')}
             className={cn(
               'px-3 py-1.5 text-xs rounded-md transition-colors',
               activeTab === 'advanced'

@@ -1,6 +1,7 @@
 import React from 'react';
 import './globals.css';
 import Image from 'next/image';
+import { Analytics } from '@vercel/analytics/react';
 
 const BASE_URL = 'https://xn--om3bq41b.com';
 
@@ -60,6 +61,9 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-[#fafafa] flex flex-col">
         {children}
+        
+        {/* Vercel Web Analytics */}
+        <Analytics />
 
         {/* Footer - Sticky Bottom */}
         <footer className="border-t border-gray-100 bg-white mt-auto">
@@ -81,7 +85,7 @@ export default function RootLayout({
                 <a href="https://work.mma.go.kr/caisBYIS/search/byjjecgeomsaek.do" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600 transition-colors">
                   원본 검색 사이트
                 </a>
-                <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600 transition-colors">
+                <a href="https://github.com/jiwonMe/work-mma-sdk" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600 transition-colors">
                   GitHub
                 </a>
               </div>
