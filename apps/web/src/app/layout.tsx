@@ -2,8 +2,10 @@ import React from 'react';
 import './globals.css';
 import Image from 'next/image';
 
+const BASE_URL = 'https://xn--om3bq41b.com';
+
 export const metadata = {
-  metadataBase: new URL('https://byungtuk.com'),
+  metadataBase: new URL(BASE_URL),
   title: '병특.com',
   description: '병역특례 지정업체 검색 서비스',
   viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
@@ -15,9 +17,11 @@ export const metadata = {
   openGraph: {
     title: '병특.com',
     description: '병역특례 지정업체 검색 서비스',
+    url: BASE_URL,
+    siteName: '병특.com',
     images: [
       {
-        url: '/og-image.png',
+        url: `${BASE_URL}/og-image.png`,
         width: 1200,
         height: 630,
         alt: '병특.com - 병역특례 지정업체 검색 서비스',
@@ -30,7 +34,7 @@ export const metadata = {
     card: 'summary_large_image',
     title: '병특.com',
     description: '병역특례 지정업체 검색 서비스',
-    images: ['/og-image.png'],
+    images: [`${BASE_URL}/og-image.png`],
   },
 };
 
