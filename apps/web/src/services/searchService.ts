@@ -1,5 +1,6 @@
 import { MMAClient, CompanySearchParams, SearchResult } from 'mma-sdk';
 import { trackSearch, trackSearchError } from '../utils/analytics';
+import { recordSearchKeyword } from '../hooks/useSearchRanking';
 
 export interface SearchState {
   searchResult: SearchResult | null;
@@ -40,6 +41,11 @@ export async function searchCompanies(
         result.companies.length,
         params
       );
+
+      // 검색어 순위 기록 (비동기, 실패해도 검색 결과에 영향 없음)
+      if (params.eopche_nm) {
+        recordSearchKeyword(params.eopche_nm).catch(() => {});
+      }
     }
     
     callbacks?.onSearchSuccess?.(result, params);

@@ -3,9 +3,15 @@ import './globals.css';
 import Image from 'next/image';
 
 export const metadata = {
+  metadataBase: new URL('https://byungtuk.com'),
   title: '병특.com',
   description: '병역특례 지정업체 검색 서비스',
   viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
+  icons: {
+    icon: '/favicon.png',
+    shortcut: '/favicon.png',
+    apple: '/favicon.png',
+  },
   openGraph: {
     title: '병특.com',
     description: '병역특례 지정업체 검색 서비스',
