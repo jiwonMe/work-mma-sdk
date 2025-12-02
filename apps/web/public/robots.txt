@@ -1,0 +1,11 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://xn--om3bq41b.com/sitemap.xml
+
+# Host
+Host: https://xn--om3bq41b.com
+
