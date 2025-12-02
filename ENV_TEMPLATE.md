@@ -1,79 +1,65 @@
-# 환경변수 설정 가이드 (Vercel)
+# 환경변수 설정 가이드
 
-## 1. Vercel KV 설정
+## 1. 로컬 개발 환경
 
-Vercel 대시보드에서 KV 스토어를 생성하면 환경변수가 자동으로 설정됩니다.
+`apps/web/.env.local` 파일을 생성하고 아래 내용을 복사하세요:
 
-### 설정 방법
+```bash
+# Redis 연결 URL
+REDIS_URL=redis://default:YOUR_PASSWORD@YOUR_HOST:PORT
+```
+
+## 2. Vercel 배포 환경
+
+Vercel 대시보드에서 환경변수를 설정하세요:
 
 1. [Vercel 대시보드](https://vercel.com/dashboard) → 프로젝트 선택
-2. **Storage** 탭 클릭
-3. **Create Database** → **KV** 선택
-4. 데이터베이스 이름 입력 후 생성
-5. 프로젝트에 연결 (Connect to Project)
+2. **Settings** → **Environment Variables**
+3. 아래 환경변수 추가:
 
-### 자동 설정되는 환경변수
+| 변수명 | 값 | 설명 |
+|--------|-----|------|
+| `REDIS_URL` | `redis://...` | Redis 연결 URL |
 
-| 변수명 | 설명 |
-|--------|------|
-| `KV_REST_API_URL` | Vercel KV REST API URL |
-| `KV_REST_API_TOKEN` | Vercel KV REST API 토큰 |
-| `KV_REST_API_READ_ONLY_TOKEN` | 읽기 전용 토큰 |
-| `KV_URL` | Redis 호환 URL |
+## 3. Redis 서비스 옵션
 
-## 2. 로컬 개발 환경
+### Redis Cloud (추천)
+- https://redis.com/cloud/
+- 무료 티어: 30MB 제공
+- URL 형식: `redis://default:PASSWORD@HOST:PORT`
 
-Vercel CLI를 사용하여 환경변수를 로컬에서 사용할 수 있습니다.
+### Upstash
+- https://upstash.com/
+- 서버리스 Redis
+- Vercel 통합 지원
 
-```bash
-# Vercel CLI 설치
-npm i -g vercel
+### Railway
+- https://railway.app/
+- Redis 플러그인 제공
 
-# 프로젝트 연결
-vercel link
-
-# 환경변수 가져오기
-vercel env pull .env.local
-```
-
-또는 `apps/web/.env.local` 파일을 직접 생성:
-
-```bash
-# Vercel KV 환경변수 (Vercel 대시보드에서 복사)
-KV_REST_API_URL=https://xxxx.kv.vercel-storage.com
-KV_REST_API_TOKEN=xxxx
-
-# Next.js 환경
-NODE_ENV=development
-```
-
-## 3. 환경변수 목록
+## 4. 환경변수 목록
 
 | 변수명 | 필수 | 설명 |
 |--------|------|------|
-| `KV_REST_API_URL` | ✅ | Vercel KV REST API URL |
-| `KV_REST_API_TOKEN` | ✅ | Vercel KV REST API 토큰 |
+| `REDIS_URL` | ✅ | Redis 연결 URL |
 | `NODE_ENV` | ❌ | 실행 환경 (자동 설정) |
 
-## 4. 빠른 시작
+## 5. 빠른 시작
 
 ```bash
-# 1. Vercel CLI로 환경변수 가져오기
-vercel link
-vercel env pull apps/web/.env.local
+# 1. 환경변수 설정
+cp apps/web/.env.local.example apps/web/.env.local
+# .env.local 파일에 REDIS_URL 설정
 
 # 2. 의존성 설치
 pnpm install
 
-# 3. 개발 서버 실행
+# 3. 패키지 빌드
+pnpm --filter ui build && pnpm --filter mma-sdk build
+
+# 4. 개발 서버 실행
 pnpm dev
 
-# 4. Vercel 배포
+# 5. Vercel 배포
 vercel --prod
 ```
-
-## 5. 주의사항
-
-- Vercel KV는 **Vercel Pro** 이상 플랜에서 사용 가능합니다
-- 무료 플랜은 월 30,000 요청 제한이 있습니다
-- 로컬 개발 시에도 실제 Vercel KV에 연결됩니다 (개발용 KV 별도 생성 권장)

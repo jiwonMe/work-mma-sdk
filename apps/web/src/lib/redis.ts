@@ -1,41 +1,81 @@
-import { kv } from '@vercel/kv';
+import Redis from 'ioredis';
 
 /**
- * Vercel KV 클라이언트
- * Redis 호환 키-값 저장소
- * 
- * 환경변수:
- * - KV_REST_API_URL: Vercel KV REST API URL
- * - KV_REST_API_TOKEN: Vercel KV REST API 토큰
- * 
- * Vercel 대시보드에서 KV 스토어 생성 후 자동 설정됨
+ * Redis 클라이언트 싱글톤
+ * Redis Cloud 또는 기타 외부 Redis 서비스 연결
  */
 
-// Redis 키 상수
-export const REDIS_KEYS = {
-  // 검색어 순위 Sorted Set
-  SEARCH_RANK: 'search:rank',
-  // 이전 순위 스냅샷 (순위 변동 계산용)
-  SEARCH_RANK_PREV: 'search:rank:prev',
-  // 이전 순위 스냅샷 타임스탬프
-  SEARCH_RANK_PREV_TS: 'search:rank:prev:timestamp',
-  // 검색어 캐시
-  SEARCH_RANK_CACHE: 'search:rank:cache',
-} as const;
+// 글로벌 타입 선언 (개발 환경에서 핫 리로딩 시 중복 연결 방지)
+declare global {
+  // eslint-disable-next-line no-var
+  var redis: Redis | undefined;
+}
 
 /**
- * Vercel KV 연결 상태 확인
+ * Redis 클라이언트 생성
  */
-export async function isKVConnected(): Promise<boolean> {
+function createRedisClient(): Redis | null {
+  const redisUrl = process.env.REDIS_URL;
+
+  if (!redisUrl) {
+    console.warn('[Redis] REDIS_URL 환경변수가 설정되지 않았습니다.');
+    return null;
+  }
+
   try {
-    await kv.ping();
+    const client = new Redis(redisUrl, {
+      maxRetriesPerRequest: 3,
+      retryStrategy: (times) => {
+        if (times > 3) return null;
+        return Math.min(times * 100, 3000);
+      },
+      connectTimeout: 10000,
+      commandTimeout: 5000,
+    });
+
+    client.on('connect', () => {
+      console.log('[Redis] 연결 성공');
+    });
+
+    client.on('error', (error) => {
+      console.error('[Redis] 연결 오류:', error.message);
+    });
+
+    return client;
+  } catch (error) {
+    console.error('[Redis] 클라이언트 생성 실패:', error);
+    return null;
+  }
+}
+
+/**
+ * Redis 클라이언트 인스턴스
+ */
+export const redis: Redis | null =
+  globalThis.redis ?? createRedisClient();
+
+if (process.env.NODE_ENV !== 'production' && redis) {
+  globalThis.redis = redis;
+}
+
+/**
+ * Redis 연결 상태 확인
+ */
+export async function isRedisConnected(): Promise<boolean> {
+  if (!redis) return false;
+
+  try {
+    await redis.ping();
     return true;
   } catch {
     return false;
   }
 }
 
-/**
- * Vercel KV 클라이언트 export
- */
-export { kv };
+// Redis 키 상수
+export const REDIS_KEYS = {
+  SEARCH_RANK: 'search:rank',
+  SEARCH_RANK_PREV: 'search:rank:prev',
+  SEARCH_RANK_PREV_TS: 'search:rank:prev:timestamp',
+  SEARCH_RANK_CACHE: 'search:rank:cache',
+} as const;
